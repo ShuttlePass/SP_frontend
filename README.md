@@ -43,7 +43,14 @@
      @tailwind utilities;
      ```
 
-4. **React Query 설정 (TanStack Query)**
+4. React-Router 설치
+
+   ```
+   yarn add react react-dom react-router-dom
+   yarn add -D typescript @types/react @types/react-dom @types/react-router-dom
+   ```
+
+5. **React Query 설정 (TanStack Query)**
 
    - `src/main.tsx` 수정
 
@@ -65,7 +72,7 @@
      );
      ```
 
-5. **Zustand 상태 관리 초기 설정**
+6. **Zustand 상태 관리 초기 설정**
 
    - `src/store/store.ts` 생성
 
@@ -85,7 +92,7 @@
      }));
      ```
 
-6. **Vite 서버 실행**
+7. **Vite 서버 실행**
 
    ```
    yarn dev

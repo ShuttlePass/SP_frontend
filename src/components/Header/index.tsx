@@ -5,7 +5,7 @@ import MyAccountButton from "../Button/MyAccountButton";
 
 const Header = () => {
   return (
-    <header className="w-full bg-white">
+    <header className="w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="mt-2 max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
         <Link to="/DriverMainPage">
           <img src={logo} alt="셔틀패스 로고" className="h-10"></img>

@@ -7,20 +7,14 @@ const Header = () => {
   return (
     <header className="w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="mt-2 max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
-        <Link to="/DriverMainPage">
+        <Link to="/">
           <img src={logo} alt="셔틀패스 로고" className="h-10"></img>
         </Link>
         <nav className="hidden sm:flex space-x-32">
-          <Link
-            to="/DriverSchedulePage"
-            className="font-bold hover:text-blue-600"
-          >
+          <Link to="/" className="font-bold hover:text-blue-600">
             {/* header 메뉴 바 추가 */}
           </Link>
-          <Link
-            to="/AttendanceCheckPage"
-            className="font-bold hover:text-blue-600"
-          >
+          <Link to="/" className="font-bold hover:text-blue-600">
             {/* header 메뉴 바 추가 */}
           </Link>
         </nav>

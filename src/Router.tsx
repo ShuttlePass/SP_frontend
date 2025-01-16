@@ -1,9 +1,12 @@
 import { Route, Routes } from "react-router-dom";
+import Main from "./pages/admin/Main";
 
 const Router: React.FC = () => {
   return (
     <>
-      <Routes></Routes>
+      <Routes>
+        <Route path="/" element={<Main />} />
+      </Routes>
     </>
   );
 };

@@ -16,6 +16,12 @@ const handleAccount = () => {
   console.log("");
 };
 
+const getLogoLinkPath = (pathname: string) => {
+  if (pathname.startsWith("/driver")) return "/driver";
+  if (pathname.startsWith("/admin")) return "/admin";
+  return "/";
+};
+
 const getHeaderMenuItems = (pathname: string): MenuItem[] => {
   if (pathname.startsWith("/drive")) {
     return [
@@ -36,7 +42,9 @@ const Header = () => {
   return (
     <header className="w-full bg-white border-b border-gray-200 shadow-sm">
       <div className="mt-2 max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
-        <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
+        <Link to={getLogoLinkPath(location.pathname)}>
+          <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
+        </Link>
         <nav className="hidden sm:flex space-x-32">
           {menuItems.map((item) => (
             <Link

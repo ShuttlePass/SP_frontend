@@ -6,6 +6,7 @@ const Main = () => {
   return (
     <FullScreenContainer>
       <Header />
+      <div className="w-full h-[691px] bg-primary"></div>
     </FullScreenContainer>
   );
 };

@@ -41,7 +41,7 @@ const Header = () => {
 
   return (
     <header className="w-full bg-white border-b border-gray-200 shadow-sm">
-      <div className="mt-2 max-w-7xl mx-auto flex justify-between items-center py-4 px-6">
+      <div className="mt-2 w-full mx-auto flex justify-between items-center py-4 px-6">
         <Link to={getLogoLinkPath(location.pathname)}>
           <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
         </Link>

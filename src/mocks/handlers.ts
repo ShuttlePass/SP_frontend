@@ -1,5 +1,5 @@
 import { http, HttpResponse } from "msw";
-import { MOCK_SCHEDULE_DATA } from "./scheduleData";
+import { MOCK_SCHEDULE_DATA } from "./mockScheduleData.ts";
 
 export const handlers = [
   http.get("/api//admin/shuttles/:date", ({ params }) => {

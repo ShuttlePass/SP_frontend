@@ -1,7 +1,75 @@
+import React from "react";
+import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
 import FullScreenContainer from "../../components/container/FullScreenContainer";
 import logo from "../../assets/img/logo.png";
 
+interface SignupFormValues {
+  us_id: string;
+  us_password: string;
+  us_password_confirm: string;
+  us_level: string;
+  company_name: string;
+  us_contact: string;
+  us_name: string;
+}
+
 const Signup = () => {
+  const [formValues, setFormValues] = React.useState<SignupFormValues>({
+    us_id: "",
+    us_password: "",
+    us_password_confirm: "",
+    us_level: "",
+    company_name: "",
+    us_contact: "",
+    us_name: "",
+  });
+
+  const api = axios.create({
+    baseURL: "{{local}}",
+  });
+
+  const signupMutation = useMutation({
+    mutationFn: (newUser: Omit<SignupFormValues, "us_password_confirm">) =>
+      api.post("/user", newUser),
+    onSuccess: () => {
+      alert("회원가입이 완료되었습니다.");
+      setFormValues({
+        us_id: "",
+        us_password: "",
+        us_password_confirm: "",
+        us_level: "",
+        company_name: "",
+        us_contact: "",
+        us_name: "",
+      });
+    },
+    onError: (error) => {
+      console.error(error);
+      alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+    },
+  });
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormValues((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (formValues.us_password !== formValues.us_password_confirm) {
+      alert("비밀번호가 일치하지 않습니다.");
+      return;
+    }
+
+    const { us_password_confirm, ...submitData } = formValues;
+    signupMutation.mutate(submitData);
+  };
+
   return (
     <FullScreenContainer>
       <header className="w-full bg-white border-b border-gray-200 shadow-sm">
@@ -9,15 +77,15 @@ const Signup = () => {
           <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
         </div>
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-          <div className="w-full bg-white rounded-lg shadow dark:border sm:max-w-md xl:p-0 ">
+          <div className="w-full bg-white rounded-lg shadow dark:border sm:max-w-md xl:p-0">
             <div className="p-6 space-y-4 sm:p-8">
               <h1 className="text-xl font-bold leading-tight text-black">
                 회원가입
               </h1>
-              <form className="space-y-4">
+              <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
                   <label
-                    htmlFor="name"
+                    htmlFor="us_name"
                     className="block mb-2 text-sm font-medium text-black"
                   >
                     이름
@@ -25,15 +93,17 @@ const Signup = () => {
                   <input
                     placeholder="이름을 입력해주세요."
                     type="text"
-                    name="name"
-                    id="name"
+                    name="us_name"
+                    id="us_name"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    value={formValues.us_name}
+                    onChange={handleChange}
                     required
                   />
                 </div>
                 <div>
                   <label
-                    htmlFor="name"
+                    htmlFor="company_name"
                     className="block mb-2 text-sm font-medium text-black"
                   >
                     회사명
@@ -41,15 +111,17 @@ const Signup = () => {
                   <input
                     placeholder="회사명을 입력해주세요."
                     type="text"
-                    name="name"
-                    id="name"
+                    name="company_name"
+                    id="company_name"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    value={formValues.company_name}
+                    onChange={handleChange}
                     required
                   />
                 </div>
                 <div>
                   <label
-                    htmlFor="userId"
+                    htmlFor="us_id"
                     className="block mb-2 text-sm font-medium text-black"
                   >
                     아이디
@@ -57,15 +129,17 @@ const Signup = () => {
                   <input
                     placeholder="아이디를 입력해주세요."
                     type="email"
-                    name="userId"
-                    id="userId"
+                    name="us_id"
+                    id="us_id"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    value={formValues.us_id}
+                    onChange={handleChange}
                     required
                   />
                 </div>
                 <div>
                   <label
-                    htmlFor="password"
+                    htmlFor="us_password"
                     className="block mb-2 text-sm font-medium text-black"
                   >
                     비밀번호
@@ -73,15 +147,17 @@ const Signup = () => {
                   <input
                     placeholder="비밀번호를 입력해주세요."
                     type="password"
-                    name="password"
-                    id="password"
+                    name="us_password"
+                    id="us_password"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    value={formValues.us_password}
+                    onChange={handleChange}
                     required
                   />
                 </div>
                 <div>
                   <label
-                    htmlFor="password"
+                    htmlFor="us_password_confirm"
                     className="block mb-2 text-sm font-medium text-black"
                   >
                     비밀번호 (확인)
@@ -89,25 +165,29 @@ const Signup = () => {
                   <input
                     placeholder="비밀번호 한 번 더 입력해주세요."
                     type="password"
-                    name="password"
-                    id="password"
+                    name="us_password_confirm"
+                    id="us_password_confirm"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    value={formValues.us_password_confirm}
+                    onChange={handleChange}
                     required
                   />
                 </div>
                 <div>
                   <label
-                    htmlFor="name"
+                    htmlFor="us_contact"
                     className="block mb-2 text-sm font-medium text-black"
                   >
                     연락처
                   </label>
                   <input
                     placeholder="010.xxxx.xxxx"
-                    type="number"
-                    name="name"
-                    id="name"
+                    type="text"
+                    name="us_contact"
+                    id="us_contact"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    value={formValues.us_contact}
+                    onChange={handleChange}
                     required
                   />
                 </div>
@@ -118,25 +198,28 @@ const Signup = () => {
                   <div className="flex items-center space-x-4">
                     <label className="flex items-center">
                       <input
-                        type="checkbox"
-                        name="role"
-                        value="admin"
+                        type="radio"
+                        name="us_level"
+                        value="manager"
+                        checked={formValues.us_level === "manager"}
+                        onChange={handleChange}
                         className="mr-2"
                       />
                       관리자
                     </label>
                     <label className="flex items-center">
                       <input
-                        type="checkbox"
-                        name="role"
+                        type="radio"
+                        name="us_level"
                         value="driver"
+                        checked={formValues.us_level === "driver"}
+                        onChange={handleChange}
                         className="mr-2"
                       />
                       기사
                     </label>
                   </div>
                 </div>
-
                 <button
                   type="submit"
                   className="w-full text-white bg-primary hover:bg-primary-700 rounded-lg text-sm px-5 py-2.5"

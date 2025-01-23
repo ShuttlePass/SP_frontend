@@ -9,7 +9,7 @@ export const handlers = [
     if (!scheduleData) {
       return new HttpResponse(
         JSON.stringify({ message: "해당 날짜의 스케줄이 없습니다." }),
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -29,7 +29,7 @@ export const handlers = [
     if (!timeSlot) {
       return new HttpResponse(
         JSON.stringify({ message: "해당 시간의 노선 정보가 없습니다." }),
-        { status: 404 },
+        { status: 404 }
       );
     }
 

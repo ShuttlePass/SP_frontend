@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import FullScreenContainer from "../../components/container/FullScreenContainer";
@@ -22,13 +22,13 @@ interface CompanyResponse {
 
 interface Company {
   co_idx: number;
-  co_name: string;
+  co_co_name: string;
   created_at: string;
   updated_at: string;
 }
 
 const Signup = () => {
-  const [formValues, setFormValues] = React.useState<SignupFormValues>({
+  const [formValues, setFormValues] = useState<SignupFormValues>({
     us_id: "",
     us_password: "",
     us_password_confirm: "",
@@ -38,12 +38,15 @@ const Signup = () => {
     us_name: "",
   });
 
+  const [companyList, setCompanyList] = useState<Company[]>([]);
+
   const api = axios.create({
     baseURL: import.meta.env.VITE_API_SERVER_URL,
   });
 
   const fetchCompanies = async (): Promise<CompanyResponse> => {
     const { data } = await api.get<CompanyResponse>("/list/company?ip=0");
+    setCompanyList(data?.data);
     return data;
   };
 
@@ -52,7 +55,7 @@ const Signup = () => {
     queryFn: fetchCompanies,
   });
 
-  console.log(data);
+  console.log(companyList);
 
   const signupMutation = useMutation({
     mutationFn: (newUser: Omit<SignupFormValues, "us_password_confirm">) =>
@@ -139,17 +142,30 @@ const Signup = () => {
                   >
                     회사명
                   </label>
-                  <input
-                    placeholder="회사명을 입력해주세요."
-                    type="text"
+                  <select
                     name="company_name"
                     id="company_name"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
                     value={formValues.company_name}
-                    onChange={handleChange}
+                    onChange={(e) =>
+                      setFormValues((prev) => ({
+                        ...prev,
+                        company_name: e.target.value,
+                      }))
+                    }
                     required
-                  />
+                  >
+                    <option value="" disabled>
+                      회사명을 선택해주세요.
+                    </option>
+                    {companyList.map((company) => (
+                      <option key={company.co_idx} value={company.co_co_name}>
+                        {company.co_co_name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
+
                 <div>
                   <label
                     htmlFor="us_id"

@@ -9,7 +9,7 @@ interface SignupFormValues {
   us_password: string;
   us_password_confirm: string;
   us_level: string;
-  company_name: string;
+  company_idx: number;
   us_contact: string;
   us_name: string;
 }
@@ -21,10 +21,10 @@ interface CompanyResponse {
 }
 
 interface Company {
-  co_idx: number;
+  co_co_idx: number;
   co_co_name: string;
-  created_at: string;
-  updated_at: string;
+  co_created_at: string;
+  co_updated_at: string;
 }
 
 const Signup = () => {
@@ -33,7 +33,7 @@ const Signup = () => {
     us_password: "",
     us_password_confirm: "",
     us_level: "",
-    company_name: "",
+    company_idx: 0,
     us_contact: "",
     us_name: "",
   });
@@ -55,8 +55,6 @@ const Signup = () => {
     queryFn: fetchCompanies,
   });
 
-  console.log(companyList);
-
   const signupMutation = useMutation({
     mutationFn: (newUser: Omit<SignupFormValues, "us_password_confirm">) =>
       api.post("/user", newUser),
@@ -67,7 +65,7 @@ const Signup = () => {
         us_password: "",
         us_password_confirm: "",
         us_level: "",
-        company_name: "",
+        company_idx: 0,
         us_contact: "",
         us_name: "",
       });
@@ -146,11 +144,13 @@ const Signup = () => {
                     name="company_name"
                     id="company_name"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
-                    value={formValues.company_name}
+                    value={formValues.company_idx}
                     onChange={(e) =>
                       setFormValues((prev) => ({
                         ...prev,
-                        company_name: e.target.value,
+                        company_idx: e.target.value
+                          ? parseInt(e.target.value)
+                          : 0,
                       }))
                     }
                     required
@@ -159,7 +159,7 @@ const Signup = () => {
                       회사명을 선택해주세요.
                     </option>
                     {companyList.map((company) => (
-                      <option key={company.co_idx} value={company.co_co_name}>
+                      <option key={company.co_co_idx} value={company.co_co_idx}>
                         {company.co_co_name}
                       </option>
                     ))}
@@ -175,7 +175,7 @@ const Signup = () => {
                   </label>
                   <input
                     placeholder="아이디를 입력해주세요."
-                    type="email"
+                    type="text"
                     name="us_id"
                     id="us_id"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"

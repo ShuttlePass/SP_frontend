@@ -15,7 +15,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="확인">
       <div className="p-4">
-        <p className="mb-4">등록 하시겠습니까?</p>
+        <p className="mb-4">등록하시겠습니까?</p>
         <div className="flex justify-end gap-2">
           <button
             onClick={onClose}

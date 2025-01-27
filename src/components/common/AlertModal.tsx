@@ -10,7 +10,7 @@ interface AlertModalProps {
 const AlertModal: React.FC<AlertModalProps> = ({
   isOpen,
   onClose,
-  message = '필수 정보를 모두 입력해주세요.'
+  message = '모두 입력해주세요.'
 }) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="알림">

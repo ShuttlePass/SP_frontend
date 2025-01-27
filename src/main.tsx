@@ -24,6 +24,6 @@ enableMocking().then(() => {
           <App />
         </BrowserRouter>
       </QueryClientProvider>
-    </React.StrictMode>,
+    </React.StrictMode>
   );
 });

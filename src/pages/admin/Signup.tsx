@@ -1,5 +1,5 @@
 import React from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import FullScreenContainer from "../../components/container/FullScreenContainer";
 import logo from "../../assets/img/logo.png";
@@ -14,6 +14,19 @@ interface SignupFormValues {
   us_name: string;
 }
 
+interface CompanyResponse {
+  message: string;
+  code: number;
+  data: Company[];
+}
+
+interface Company {
+  co_idx: number;
+  co_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const Signup = () => {
   const [formValues, setFormValues] = React.useState<SignupFormValues>({
     us_id: "",
@@ -26,8 +39,20 @@ const Signup = () => {
   });
 
   const api = axios.create({
-    baseURL: "{{local}}",
+    baseURL: import.meta.env.VITE_API_SERVER_URL,
   });
+
+  const fetchCompanies = async (): Promise<CompanyResponse> => {
+    const { data } = await api.get<CompanyResponse>("/list/company?ip=0");
+    return data;
+  };
+
+  const { data, isLoading, error } = useQuery<CompanyResponse, Error>({
+    queryKey: ["companies"],
+    queryFn: fetchCompanies,
+  });
+
+  console.log(data);
 
   const signupMutation = useMutation({
     mutationFn: (newUser: Omit<SignupFormValues, "us_password_confirm">) =>
@@ -72,16 +97,22 @@ const Signup = () => {
 
   return (
     <FullScreenContainer>
-      <header className="w-full bg-white border-b border-gray-200 shadow-sm">
+      <header className="w-full h-[100px] bg-white border-b border-gray-200 shadow-sm">
         <div className="mt-2 w-full mx-auto flex justify-between items-center py-4 px-6">
           <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
         </div>
-        <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-          <div className="w-full bg-white rounded-lg shadow dark:border sm:max-w-md xl:p-0">
-            <div className="p-6 space-y-4 sm:p-8">
-              <h1 className="text-xl font-bold leading-tight text-black">
-                회원가입
-              </h1>
+      </header>
+      <div className="w-full flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
+        <div className="w-full bg-white rounded-lg shadow dark:border sm:max-w-md xl:p-0">
+          <div className="p-6 space-y-4 sm:p-8">
+            <h1 className="text-xl font-bold leading-tight text-black">
+              회원가입
+            </h1>
+            {isLoading ? (
+              <div>Loading...</div>
+            ) : error ? (
+              <div>Failed to load company data.</div>
+            ) : (
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <div>
                   <label
@@ -227,10 +258,10 @@ const Signup = () => {
                   회원가입 완료
                 </button>
               </form>
-            </div>
+            )}
           </div>
         </div>
-      </header>
+      </div>
     </FullScreenContainer>
   );
 };

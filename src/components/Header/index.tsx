@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "../../assets/img/logo.png";
 import AuthButton from "../Button/AuthButton";
 
@@ -8,35 +8,41 @@ interface MenuItem {
   path: string;
 }
 
-const handleAuth = () => {
-  console.log("");
-};
-
-const handleAccount = () => {
-  console.log("");
-};
-
-const getLogoLinkPath = (pathname: string) => {
-  if (pathname.startsWith("/driver")) return "/driver";
-  if (pathname.startsWith("/admin")) return "/admin";
-  return "/";
-};
-
-const getHeaderMenuItems = (pathname: string): MenuItem[] => {
-  if (pathname.startsWith("/drive")) {
-    return [
-      { id: "schedule", label: "운영 시간표", path: "/driver/schedule" },
-      { id: "attendance", label: "출석 체크", path: "/driver/attendance" },
-    ];
-  }
-  return [
-    { id: "about", label: "회사 소개", path: "/about" },
-    { id: "service", label: "서비스 소개", path: "/service" },
-  ];
-};
-
 const Header = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleSignUp = () => {
+    navigate("/signup");
+  };
+
+  const handleSignIn = () => {
+    navigate("/signin");
+  };
+
+  const handleAccount = () => {
+    console.log("");
+  };
+
+  const getLogoLinkPath = (pathname: string) => {
+    if (pathname.startsWith("/driver")) return "/driver";
+    if (pathname.startsWith("/admin")) return "/admin";
+    return "/";
+  };
+
+  const getHeaderMenuItems = (pathname: string): MenuItem[] => {
+    if (pathname.startsWith("/drive")) {
+      return [
+        { id: "schedule", label: "운영 시간표", path: "/driver/schedule" },
+        { id: "attendance", label: "출석 체크", path: "/driver/attendance" },
+      ];
+    }
+    return [
+      { id: "about", label: "회사 소개", path: "/about" },
+      { id: "service", label: "서비스 소개", path: "/service" },
+    ];
+  };
+
   const menuItems = getHeaderMenuItems(location.pathname);
 
   return (
@@ -57,7 +63,8 @@ const Header = () => {
           ))}
         </nav>
         <div className="flex space-x-3">
-          <AuthButton onClick={handleAuth}>로그인</AuthButton>
+          <AuthButton onClick={handleSignIn}>로그인</AuthButton>
+          <AuthButton onClick={handleSignUp}>회원가입</AuthButton>
           <AuthButton onClick={handleAccount}>내 계정</AuthButton>
         </div>
       </div>

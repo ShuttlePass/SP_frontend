@@ -1,21 +1,29 @@
-import FullScreenContainer from "../../components/container/FullScreenContainer";
-import Header from "../../components/Header";
-import android from "../../assets/img/admin/android_admin_main.png";
-import intro from "../../assets/img/admin/intro_main.png";
+import Header from "@/components/Header";
+import banner from "../../assets/img/banner_main.jpeg";
+import Footer from "@/components/common/Footer";
+import ScrollDown from "@/components/common/ScrollDown";
 
 const Main = () => {
   return (
-    <FullScreenContainer>
+    <div>
       <Header />
-      <div className="w-full h-[691px] bg-primary relative">
-        <img className="absolute top-60 left-20" src={intro} alt="intro" />
+      <div className="">
         <img
-          className="h-[858px] w-[410px] absolute right-[300px] top-20"
-          src={android}
-          alt="android-main"
+          className="w-full max-h-[600px] sm:max-h-[400px] md:max-h-[450px] lg:max-h-[600px] object-cover"
+          src={banner}
+          alt="intro"
         />
       </div>
-    </FullScreenContainer>
+      <div className="flex flex-col p-52 items-center justify-center">
+        <p className="font-bold text-4xl sm:text-3xl md:text-4xl leading-[1.6] text-center mb-[50px] min-w-[350px]">
+          면허 학원 셔틀 관리의 편리함과 누락을 줄이고, 실시간 현황을
+          확인하세요.
+        </p>
+        <ScrollDown />
+      </div>
+      <div className="flex flex-col bg-gray-50 p-52 items-end"></div>
+      <Footer />
+    </div>
   );
 };
 

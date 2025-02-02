@@ -161,7 +161,7 @@ const Signup = () => {
                     <option value="" disabled>
                       회사명을 선택해주세요.
                     </option>
-                    {companyList.map((company) => (
+                    {companyList?.map((company) => (
                       <option key={company.co_co_idx} value={company.co_co_idx}>
                         {company.co_co_name}
                       </option>

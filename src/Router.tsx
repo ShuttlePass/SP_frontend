@@ -1,24 +1,27 @@
 import { Route, Routes } from "react-router-dom";
 import Main from "./pages/admin/Main";
 import Signup from "./pages/admin/Signup";
-import StudentPage from "./pages/manager/StudentPage";
-import ShuttlePage from "./pages/manager/ShuttlePage";
-import VehiclePage from "./pages/manager/VehiclePage";
+import SignupComplete from "./pages/admin/SignupComplete";
+import SignIn from "./pages/admin/SignIn";
+import { Schedule } from "./pages/Driver/Schedule";
+import StudentPage from "./pages/Manager/StudentPage";
+import ShuttlePage from "./pages/Manager/ShuttlePage";
+import VehiclePage from "./pages/Manager/VehiclePage";
 
 const Router: React.FC = () => {
   return (
-    <Routes>
-      {/* 공통 라우트 */}
-      <Route path="/" element={<Main />} />
-      <Route path="/signup" element={<Signup />} />
-      
-      {/* 관리자 라우트 */}
-      <Route path="/admin">
-        <Route path="students" element={<StudentPage />} />
-        <Route path="shuttles" element={<ShuttlePage />} />
-        <Route path="vehicles" element={<VehiclePage />} />
-      </Route>
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Main />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/signup-complete" element={<SignupComplete />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/driver/schedule" element={<Schedule />} />
+        <Route path="/admin/students" element={<StudentPage />} />
+        <Route path="/admin/shuttles" element={<ShuttlePage />} />
+        <Route path="/admin/vehicles" element={<VehiclePage />} />
+      </Routes>
+    </>
   );
 };
 

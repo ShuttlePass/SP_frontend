@@ -21,8 +21,6 @@ export const Shuttle = () => {
               setShuttleType={setShuttleType}
             />
           </div>
-
-          <div className="w-[300px] flex-shrink-0"></div>
         </div>
       </div>
     </div>

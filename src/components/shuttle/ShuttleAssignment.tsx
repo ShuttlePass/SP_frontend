@@ -258,6 +258,8 @@ const ShuttleAssignment: React.FC = () => {
 
       {/* 모달들 */}
       <ConfirmModal
+        title="수업 등록"
+        message="수업을 등록하시겠습니까?"
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleConfirm}

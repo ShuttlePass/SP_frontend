@@ -7,17 +7,18 @@ import VehiclePage from "./pages/manager/VehiclePage";
 
 const Router: React.FC = () => {
   return (
-    <>
     <Routes>
+      {/* 공통 라우트 */}
       <Route path="/" element={<Main />} />
       <Route path="/signup" element={<Signup />} />
-      </Routes>
-      <Routes>
-        <Route path="/admin/students" element={<StudentPage />} />
-        <Route path="/admin/shuttles" element={<ShuttlePage />} />
-        <Route path="/admin/vehicles" element={<VehiclePage />} />
-      </Routes>
-    </>
+      
+      {/* 관리자 라우트 */}
+      <Route path="/admin">
+        <Route path="students" element={<StudentPage />} />
+        <Route path="shuttles" element={<ShuttlePage />} />
+        <Route path="vehicles" element={<VehiclePage />} />
+      </Route>
+    </Routes>
   );
 };
 

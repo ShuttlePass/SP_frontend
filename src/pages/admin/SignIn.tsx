@@ -16,7 +16,6 @@ const SignIn = () => {
     us_id: "",
     us_password: "",
   });
-
   const api = axios.create({
     baseURL: import.meta.env.VITE_API_SERVER_URL,
   });
@@ -55,14 +54,14 @@ const SignIn = () => {
 
   return (
     <FullScreenContainer>
-      <header className="w-full h-[100px] bg-white border-b border-gray-200 shadow-sm">
-        <div className="mt-2 w-full mx-auto flex justify-between items-center py-4 px-6">
+      <header className="h-[100px] w-full border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto mt-2 flex w-full items-center justify-between px-6 py-4">
           <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
         </div>
       </header>
-      <div className="w-full flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-        <div className="w-full bg-white rounded-lg shadow dark:border sm:max-w-md xl:p-0">
-          <div className="p-6 space-y-4 sm:p-8">
+      <div className="mx-auto flex w-full flex-col items-center justify-center px-6 py-8 md:h-screen lg:py-0">
+        <div className="w-full rounded-lg bg-white shadow sm:max-w-md xl:p-0 dark:border">
+          <div className="space-y-4 p-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight text-black">
               로그인
             </h1>
@@ -71,7 +70,7 @@ const SignIn = () => {
               <div>
                 <label
                   htmlFor="us_id"
-                  className="block mb-2 text-sm font-medium text-black"
+                  className="mb-2 block text-sm font-medium text-black"
                 >
                   아이디
                 </label>
@@ -80,7 +79,7 @@ const SignIn = () => {
                   type="text"
                   name="us_id"
                   id="us_id"
-                  className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                  className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                   value={formValues.us_id}
                   onChange={handleChange}
                   required
@@ -89,7 +88,7 @@ const SignIn = () => {
               <div>
                 <label
                   htmlFor="us_password"
-                  className="block mb-2 text-sm font-medium text-black"
+                  className="mb-2 block text-sm font-medium text-black"
                 >
                   비밀번호
                 </label>
@@ -98,7 +97,7 @@ const SignIn = () => {
                   type="password"
                   name="us_password"
                   id="us_password"
-                  className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                  className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                   value={formValues.us_password}
                   onChange={handleChange}
                   required
@@ -133,11 +132,11 @@ const SignIn = () => {
               </div>
               <button
                 type="submit"
-                className="w-full text-white bg-primary hover:bg-primary-700 rounded-lg text-sm px-5 py-2.5"
+                className="bg-primary hover:bg-primary-700 w-full rounded-lg px-5 py-2.5 text-sm text-white"
               >
                 로그인 완료
               </button>
-              <div className="flex gap-6 w-full justify-center text-gray-400">
+              <div className="flex w-full justify-center gap-6 text-gray-400">
                 <div>비밀번호 찾기</div> |{" "}
                 <div onClick={() => navigate("/signup")}>회원 가입</div>
               </div>

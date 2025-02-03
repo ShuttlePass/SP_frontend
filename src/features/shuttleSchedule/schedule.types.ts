@@ -1,5 +1,3 @@
-import { Passenger } from "@/types/shuttle.types";
-
 export interface ScheduleData {
   [date: string]: ScheduleType;
 }
@@ -17,5 +15,13 @@ export interface BusRoute {
 
 export interface TimeSlot {
   time: string;
+  peopleCount: number;
   passengers?: Passenger[];
+}
+
+export interface Passenger {
+  name: string;
+  contact: string;
+  address: string;
+  boardingLocation: string;
 }

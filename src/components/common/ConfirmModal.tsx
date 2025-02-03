@@ -1,34 +1,43 @@
 import React from 'react';
 import Modal from './Modal';
+import Button from './Button';
 
 interface ConfirmModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  title: string;
+  message: string;
   onConfirm: () => void;
+  onClose: () => void;
+  confirmText?: string;
+  cancelText?: string;
 }
 
 const ConfirmModal: React.FC<ConfirmModalProps> = ({
   isOpen,
+  title,
+  message,
+  onConfirm,
   onClose,
-  onConfirm
+  confirmText = '학생 삭제',
+  cancelText = '취소'
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="확인">
-      <div className="p-4">
-        <p className="mb-4">등록하시겠습니까?</p>
+    <Modal isOpen={isOpen} onClose={onClose} title={title}>
+      <div className="p-6 bg-white rounded-lg">
+        <p className="mb-6 text-gray-600">{message}</p>
         <div className="flex justify-end gap-2">
-          <button
+          <Button
+            variant="secondary"
             onClick={onClose}
-            className="px-4 py-2 border rounded hover:bg-gray-100"
           >
-            취소
-          </button>
-          <button
+            {cancelText}
+          </Button>
+          <Button
+            variant="danger"
             onClick={onConfirm}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
-            확인
-          </button>
+            {confirmText}
+          </Button>
         </div>
       </div>
     </Modal>

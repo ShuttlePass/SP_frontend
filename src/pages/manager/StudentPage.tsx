@@ -72,7 +72,7 @@ const StudentPage = () => {
   const filteredStudents = students?.filter(
     (student) =>
       !searchTerm ||
-      student.name.toLowerCase().includes(searchTerm.toLowerCase())
+      student.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // 날짜 포맷 함수 추가
@@ -143,7 +143,7 @@ const StudentPage = () => {
         st_contact: studentData.phone,
         st_address: studentData.address,
       });
-      await queryClient.invalidateQueries({ queryKey: ['students'] });
+      await queryClient.invalidateQueries({ queryKey: ["students"] });
       setShowRegisterModal(false);
       setAlertMessage("등록되었습니다.");
       setShowAlert(true);
@@ -169,7 +169,7 @@ const StudentPage = () => {
         try {
           await mockCourseService.deleteCourse(course.id);
           await queryClient.invalidateQueries({
-            queryKey: ['assignedCourses', selectedStudent?.id],
+            queryKey: ["assignedCourses", selectedStudent?.id],
           });
           setShowConfirmModal(null);
           setAlertMessage("수업이 삭제되었습니다.");
@@ -177,7 +177,9 @@ const StudentPage = () => {
         } catch (error) {
           const apiError = error as ApiError;
           console.error("수업 삭제 실패:", error);
-          setAlertMessage(apiError.message || "수업 삭제 중 오류가 발생했습니다.");
+          setAlertMessage(
+            apiError.message || "수업 삭제 중 오류가 발생했습니다.",
+          );
           setShowAlert(true);
         }
       },
@@ -186,12 +188,10 @@ const StudentPage = () => {
 
   // 수업 카드 컴포넌트 수정
   const CourseCard = ({ course }: { course: AssignedCourse }) => (
-    <div className="bg-white rounded-lg p-3 border border-gray-200">
-      <div className="flex justify-between items-center">
+    <div className="rounded-lg border border-gray-200 bg-white p-3">
+      <div className="flex items-center justify-between">
         <div>
-          <div className="font-medium">
-            {course.type}
-          </div>
+          <div className="font-medium">{course.type}</div>
           <div className="text-sm text-gray-500">
             {formatDateToKorean(course.date)} {course.startTime}
           </div>
@@ -202,7 +202,7 @@ const StudentPage = () => {
               e.stopPropagation();
               handleEditCourse(course);
             }}
-            className="text-blue-600 hover:text-blue-700 text-sm px-2 py-1 rounded hover:bg-blue-50 transition-colors"
+            className="rounded px-2 py-1 text-sm text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700"
           >
             수정
           </button>
@@ -211,7 +211,7 @@ const StudentPage = () => {
               e.stopPropagation();
               handleDeleteCourse(course);
             }}
-            className="text-red-600 hover:text-red-700 text-sm px-2 py-1 rounded hover:bg-red-50 transition-colors"
+            className="rounded px-2 py-1 text-sm text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
           >
             삭제
           </button>
@@ -225,7 +225,7 @@ const StudentPage = () => {
       <AdminSidebar />
       <div className="flex-1 p-4">
         {/* 상단 헤더에서 제목 제거하고 버튼만 유지 */}
-        <div className="flex justify-end mb-4">
+        <div className="mb-4 flex justify-end">
           <div className="flex gap-2">
             <Button
               variant="secondary"
@@ -259,18 +259,18 @@ const StudentPage = () => {
 
           {/* 오른쪽: 학생 상세 정보 패널 */}
           <div className="w-[400px]">
-            <div className="bg-white p-6 rounded-lg shadow-md">
-              <div className="flex justify-between items-center mb-6">
+            <div className="rounded-lg bg-white p-6 shadow-md">
+              <div className="mb-6 flex items-center justify-between">
                 <h2 className="text-xl font-bold">학생 정보</h2>
                 {selectedStudent && (
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowDetailModal(true)}
-                      className="p-1.5 rounded hover:bg-gray-100"
+                      className="rounded p-1.5 hover:bg-gray-100"
                       title="학생 정보 수정"
                     >
                       <svg
-                        className="w-5 h-5 text-gray-600"
+                        className="h-5 w-5 text-gray-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -285,11 +285,11 @@ const StudentPage = () => {
                     </button>
                     <button
                       onClick={() => handleDeleteClick(selectedStudent)}
-                      className="p-1.5 rounded hover:bg-gray-100"
+                      className="rounded p-1.5 hover:bg-gray-100"
                       title="학생 삭제"
                     >
                       <svg
-                        className="w-5 h-5 text-gray-600"
+                        className="h-5 w-5 text-gray-600"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -309,8 +309,8 @@ const StudentPage = () => {
               {selectedStudent ? (
                 <>
                   {/* 기본 정보 섹션 */}
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <h3 className="text-lg font-semibold mb-3">기본 정보</h3>
+                  <div className="mb-6 rounded-lg bg-gray-50 p-4">
+                    <h3 className="mb-3 text-lg font-semibold">기본 정보</h3>
                     <div className="space-y-2">
                       <div className="flex items-center">
                         <span className="w-20 text-gray-600">이름</span>
@@ -330,8 +330,8 @@ const StudentPage = () => {
                   </div>
 
                   {/* 수업 정보 섹션 */}
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-center mb-3">
+                  <div className="rounded-lg bg-gray-50 p-4">
+                    <div className="mb-3 flex items-center justify-between">
                       <h3 className="text-lg font-semibold">수업 정보</h3>
                       <Button
                         variant="primary"
@@ -351,7 +351,7 @@ const StudentPage = () => {
                         <CourseCard key={course.id} course={course} />
                       ))}
                       {assignedCourses?.length === 0 && (
-                        <p className="text-center text-gray-500 py-4">
+                        <p className="py-4 text-center text-gray-500">
                           배정된 수업이 없습니다.
                         </p>
                       )}
@@ -359,7 +359,7 @@ const StudentPage = () => {
                   </div>
                 </>
               ) : (
-                <div className="text-center text-gray-500 py-8">
+                <div className="py-8 text-center text-gray-500">
                   학생을 선택하면 정보를 확인할 수 있습니다.
                 </div>
               )}

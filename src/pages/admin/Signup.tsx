@@ -15,17 +15,17 @@ interface SignupFormValues {
   us_name: string;
 }
 
+interface Company {
+  co_idx: number;
+  co_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface CompanyResponse {
   message: string;
   code: number;
   data: Company[];
-}
-
-interface Company {
-  co_co_idx: number;
-  co_co_name: string;
-  co_created_at: string;
-  co_updated_at: string;
 }
 
 const Signup = () => {
@@ -138,22 +138,20 @@ const Signup = () => {
                 </div>
                 <div>
                   <label
-                    htmlFor="company_name"
+                    htmlFor="company_idx"
                     className="block mb-2 text-sm font-medium text-black"
                   >
                     회사명
                   </label>
                   <select
-                    name="company_name"
-                    id="company_name"
+                    name="company_idx"
+                    id="company_idx"
                     className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
                     value={formValues.company_idx}
                     onChange={(e) =>
                       setFormValues((prev) => ({
                         ...prev,
-                        company_idx: e.target.value
-                          ? parseInt(e.target.value)
-                          : 0,
+                        company_idx: e.target.value ? parseInt(e.target.value) : 0,
                       }))
                     }
                     required
@@ -162,8 +160,8 @@ const Signup = () => {
                       회사명을 선택해주세요.
                     </option>
                     {companyList?.map((company) => (
-                      <option key={company.co_co_idx} value={company.co_co_idx}>
-                        {company.co_co_name}
+                      <option key={company.co_idx} value={company.co_idx}>
+                        {company.co_name}
                       </option>
                     ))}
                   </select>

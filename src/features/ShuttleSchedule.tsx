@@ -53,6 +53,7 @@ const ShuttleSchedule = ({ carName }: ShuttleScheduleProps) => {
         {/* 날짜 및 셔틀 타입 선택 */}
         <div className="mb-4 flex items-center justify-between">
           <select
+            title="셔틀 타입"
             className="rounded-md border border-gray-300 px-3 py-2"
             value={shuttleType}
             onChange={(e) => setShuttleType(e.target.value as ShuttleType)}

@@ -3,12 +3,12 @@ import logo from "../../assets/img/logo.png";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { api } from '@/api/axios';
+import { api } from "@/api/axios";
 
 interface LoginFormValues {
   us_id: string;
   us_password: string;
-  us_level: string;  // UI 용도로만 사용
+  us_level: string; // UI 용도로만 사용
 }
 
 interface LoginRequest {
@@ -19,15 +19,22 @@ interface LoginRequest {
 interface LoginResponse {
   message: string;
   code: number;
-  data: string;  // JWT 토큰
+  data: {
+    token: string;
+    company_idx: number;
+    us_level: string;
+  };
 }
 
 interface ApiError {
   response?: {
+    status?: number;
     data?: {
       message?: string;
     };
   };
+  message?: string;
+  stack?: string;
 }
 
 const SignIn = () => {
@@ -43,53 +50,83 @@ const SignIn = () => {
       try {
         const requestData: LoginRequest = {
           us_id: credentials.us_id,
-          us_password: credentials.us_password
+          us_password: credentials.us_password,
         };
-        
-        const response = await api.post<LoginResponse>('/user/login', requestData);
-        
+
+        // 요청 데이터 로깅
+        console.log("로그인 요청 데이터:", requestData);
+
+        const response = await api.post<LoginResponse>(
+          "/user/login",
+          requestData,
+        );
+
+        // 응답 데이터 로깅
+        console.log("로그인 응답 데이터:", response.data);
+
         if (response.data.code !== 1) {
-          throw new Error(response.data.message || '로그인에 실패했습니다.');
+          console.error("로그인 실패 응답:", response.data);
+          throw new Error(response.data.message || "로그인에 실패했습니다.");
         }
 
-        // 토큰 저장
-        localStorage.setItem('token', response.data.data);
-        
+        // 토큰 저장 - response.data.data.token 사용
+        const token = response.data.data.token;
+        if (typeof token === "string") {
+          localStorage.setItem("token", token);
+          console.log("저장된 토큰:", token);
+        } else {
+          console.error("잘못된 토큰 형식:", response.data.data);
+          throw new Error("유효하지 않은 토큰 형식입니다.");
+        }
+
         return {
           ...response.data,
-          selectedLevel: credentials.us_level
+          selectedLevel: credentials.us_level,
         };
       } catch (error) {
         const apiError = error as ApiError;
-        console.error('Login error details:', apiError.response?.data);
+        console.error("로그인 에러 상세:", {
+          status: apiError.response?.status,
+          data: apiError.response?.data,
+          message: apiError.message,
+          stack: apiError.stack,
+        });
         throw error;
       }
     },
-    onSuccess: () => {
-      // UI에서 선택한 레벨로 페이지 이동
+    onSuccess: (data) => {
+      // 성공 데이터 로깅
+      console.log("로그인 성공:", data);
+
       const userLevel = formValues.us_level;
-      console.log('Selected user level:', userLevel);
-      
-      switch(userLevel) {
-        case 'manager':
-          alert('관리자로 로그인되었습니다.');
-          navigate('/admin/students');
+      console.log("선택된 사용자 레벨:", userLevel);
+
+      switch (userLevel) {
+        case "manager":
+          alert("관리자로 로그인되었습니다.");
+          navigate("/admin/students");
           break;
-        case 'driver':
-          alert('기사로 로그인되었습니다.');
-          navigate('/driver/schedule');
+        case "driver":
+          alert("기사로 로그인되었습니다.");
+          navigate("/driver/schedule");
           break;
         default:
-          console.error('Unknown user level:', userLevel);
-          alert('사용자 권한을 확인할 수 없습니다.');
+          console.error("알 수 없는 사용자 레벨:", userLevel);
+          alert("사용자 권한을 확인할 수 없습니다.");
       }
     },
     onError: (error) => {
       const apiError = error as ApiError;
-      console.error('로그인 실패:', error);
-      const errorMessage = apiError.response?.data?.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
+      console.error("로그인 실패 상세:", {
+        error: error,
+        response: apiError.response?.data,
+        status: apiError.response?.status,
+      });
+      const errorMessage =
+        apiError.response?.data?.message ||
+        "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.";
       alert(errorMessage);
-    }
+    },
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -107,14 +144,14 @@ const SignIn = () => {
 
   return (
     <FullScreenContainer>
-      <header className="w-full h-[100px] bg-white border-b border-gray-200 shadow-sm">
-        <div className="mt-2 w-full mx-auto flex justify-between items-center py-4 px-6">
+      <header className="h-[100px] w-full border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto mt-2 flex w-full items-center justify-between px-6 py-4">
           <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
         </div>
       </header>
-      <div className="w-full flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-        <div className="w-full bg-white rounded-lg shadow dark:border sm:max-w-md xl:p-0">
-          <div className="p-6 space-y-4 sm:p-8">
+      <div className="mx-auto flex w-full flex-col items-center justify-center px-6 py-8 md:h-screen lg:py-0">
+        <div className="w-full rounded-lg bg-white shadow sm:max-w-md xl:p-0 dark:border">
+          <div className="space-y-4 p-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight text-black">
               로그인
             </h1>
@@ -123,7 +160,7 @@ const SignIn = () => {
               <div>
                 <label
                   htmlFor="us_id"
-                  className="block mb-2 text-sm font-medium text-black"
+                  className="mb-2 block text-sm font-medium text-black"
                 >
                   아이디
                 </label>
@@ -132,7 +169,7 @@ const SignIn = () => {
                   type="text"
                   name="us_id"
                   id="us_id"
-                  className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                  className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                   value={formValues.us_id}
                   onChange={handleChange}
                   required
@@ -141,7 +178,7 @@ const SignIn = () => {
               <div>
                 <label
                   htmlFor="us_password"
-                  className="block mb-2 text-sm font-medium text-black"
+                  className="mb-2 block text-sm font-medium text-black"
                 >
                   비밀번호
                 </label>
@@ -150,7 +187,7 @@ const SignIn = () => {
                   type="password"
                   name="us_password"
                   id="us_password"
-                  className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                  className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                   value={formValues.us_password}
                   onChange={handleChange}
                   required
@@ -185,11 +222,11 @@ const SignIn = () => {
               </div>
               <button
                 type="submit"
-                className="w-full text-white bg-primary hover:bg-primary-700 rounded-lg text-sm px-5 py-2.5"
+                className="bg-primary hover:bg-primary-700 w-full rounded-lg px-5 py-2.5 text-sm text-white"
               >
                 로그인 완료
               </button>
-              <div className="flex gap-6 w-full justify-center text-gray-400">
+              <div className="flex w-full justify-center gap-6 text-gray-400">
                 <div>비밀번호 찾기</div> |{" "}
                 <div onClick={() => navigate("/signup")}>회원 가입</div>
               </div>

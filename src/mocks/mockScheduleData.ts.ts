@@ -9,6 +9,7 @@ export const MOCK_SCHEDULE_DATA: ScheduleData = {
         timeSlots: [
           {
             time: "09:00",
+            peopleCount: 3,
             passengers: [
               {
                 name: "홍길동",
@@ -32,6 +33,7 @@ export const MOCK_SCHEDULE_DATA: ScheduleData = {
           },
           {
             time: "11:00",
+            peopleCount: 2,
             passengers: [
               {
                 name: "이상훈",
@@ -49,6 +51,7 @@ export const MOCK_SCHEDULE_DATA: ScheduleData = {
           },
           {
             time: "13:00",
+            peopleCount: 12,
             passengers: [
               {
                 name: "강지원",
@@ -132,6 +135,7 @@ export const MOCK_SCHEDULE_DATA: ScheduleData = {
         timeSlots: [
           {
             time: "09:30",
+            peopleCount: 2,
             passengers: [
               {
                 name: "강지원",
@@ -149,6 +153,7 @@ export const MOCK_SCHEDULE_DATA: ScheduleData = {
           },
           {
             time: "11:30",
+            peopleCount: 3,
             passengers: [
               {
                 name: "허지원",
@@ -180,6 +185,7 @@ export const MOCK_SCHEDULE_DATA: ScheduleData = {
         timeSlots: [
           {
             time: "14:00",
+            peopleCount: 3,
             passengers: [
               {
                 name: "임하진",
@@ -214,6 +220,7 @@ export const MOCK_SCHEDULE_DATA: ScheduleData = {
         timeSlots: [
           {
             time: "08:00",
+            peopleCount: 5,
             passengers: [
               {
                 name: "김철수",

@@ -68,19 +68,21 @@ const Signup = () => {
   });
 
   const signupMutation = useMutation({
-    mutationFn: async (newUser: Omit<SignupFormValues, "us_password_confirm">) => {
-      console.log('회원가입 요청 데이터:', newUser);
-      
+    mutationFn: async (
+      newUser: Omit<SignupFormValues, "us_password_confirm">,
+    ) => {
+      console.log("회원가입 요청 데이터:", newUser);
+
       try {
         const response = await api.post("/user", newUser);
-        console.log('회원가입 응답:', response.data);
+        console.log("회원가입 응답:", response.data);
         return response.data;
       } catch (error) {
         const apiError = error as ApiError;
-        console.error('회원가입 에러 상세:', {
+        console.error("회원가입 에러 상세:", {
           status: apiError.response?.status,
           data: apiError.response?.data,
-          headers: apiError.response?.headers
+          headers: apiError.response?.headers,
         });
         throw error;
       }
@@ -100,8 +102,9 @@ const Signup = () => {
     },
     onError: (error) => {
       const apiError = error as ApiError;
-      const errorMessage = apiError.response?.data?.message || "회원가입에 실패했습니다.";
-      console.error('회원가입 실패:', errorMessage);
+      const errorMessage =
+        apiError.response?.data?.message || "회원가입에 실패했습니다.";
+      console.error("회원가입 실패:", errorMessage);
       alert(errorMessage);
     },
   });
@@ -122,7 +125,7 @@ const Signup = () => {
       return;
     }
 
-    if (!formValues.company_idx) {
+    if (!formValues.company_idx || formValues.company_idx === 0) {
       alert("회사를 선택해주세요.");
       return;
     }
@@ -134,7 +137,7 @@ const Signup = () => {
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { us_password_confirm, ...submitData } = formValues;
-    console.log('제출할 데이터:', submitData);
+    console.log("제출할 데이터:", submitData);
     signupMutation.mutate(submitData);
   };
 
@@ -186,7 +189,7 @@ const Signup = () => {
                     name="company_idx"
                     id="company_idx"
                     className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
-                    value={formValues.company_idx}
+                    value={formValues.company_idx || ""}
                     onChange={(e) =>
                       setFormValues((prev) => ({
                         ...prev,
@@ -197,9 +200,7 @@ const Signup = () => {
                     }
                     required
                   >
-                    <option value="" disabled>
-                      회사명을 선택해주세요.
-                    </option>
+                    <option value="">회사명을 선택해주세요.</option>
                     {companyList?.map((company) => (
                       <option key={company.co_idx} value={company.co_idx}>
                         {company.co_name}

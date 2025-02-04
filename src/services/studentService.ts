@@ -19,83 +19,116 @@ interface StudentResponse {
   st_address: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_SERVER_URL;
 
-//토큰 수정 필요 시 수정
-const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c19pZHgiOjEwLCJjb21wYW55X2lkeCI6MSwidXNfbGV2ZWwiOiJtYW5hZ2VyIiwiaWF0IjoxNzM4NTQyNTQxLCJleHAiOjE3Mzg2Mjg5NDF9.yLmZ7tAhfnNXDtl9cqkxtqoaFacRGA0lDkg39p2rcwk';
+// 토큰을 가져오는 함수
+const getToken = () => {
+  const token = localStorage.getItem("token");
+  if (!token) {
+    window.location.href = "/signin";
+    return null;
+  }
+  return token;
+};
+
 export const studentService = {
   // 학생 목록 조회
   getStudents: async (): Promise<Student[]> => {
     try {
+      const token = getToken();
+      if (!token) return [];
+
+      console.log("API URL:", `${API_BASE_URL}/student`);
+      console.log("Using token:", token); // 토큰 확인용 로그
+
       const response = await fetch(`${API_BASE_URL}/student`, {
         headers: {
-          'Authorization': `Bearer ${TEST_TOKEN}`
-        }
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
       });
 
+      if (response.status === 401) {
+        localStorage.removeItem("token"); // 토큰이 유효하지 않으면 제거
+        window.location.href = "/signin";
+        throw new Error("인증이 필요합니다.");
+      }
+
+      // 응답 상태 확인 및 에러 처리 개선
       if (!response.ok) {
-        throw new Error('API 호출 실패');
+        const errorText = await response.text();
+        console.error("API 에러 응답:", errorText);
+        throw new Error(`API 호출 실패 (${response.status}): ${errorText}`);
       }
 
       const result = await response.json();
-      
-      // 응답 구조 확인을 위한 로깅
-      console.log('API Response:', result);
-      
+      console.log("API 응답 데이터:", result);
+
+      // 응답 데이터 구조 확인
+      if (!result.data || !Array.isArray(result.data)) {
+        throw new Error("잘못된 응답 데이터 형식");
+      }
+
       // 데이터 구조에 맞게 매핑
       return result.data.map((student: StudentResponse) => ({
         id: student.st_idx.toString(),
         name: student.st_name,
         phone: student.st_contact,
-        address: student.st_address
+        address: student.st_address,
       }));
     } catch (error) {
-      console.error('학생 목록 조회 실패:', error);
+      console.error("학생 목록 조회 실패:", error);
       throw error;
     }
   },
 
   // 학생 등록
   registerStudent: async (data: StudentRegisterData) => {
+    const token = getToken();
+    if (!token) return;
+
     const response = await fetch(`${API_BASE_URL}/student`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${TEST_TOKEN}`
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        area_idx: 1,  // 여기서는 1을 사용
+        area_idx: 1, // 여기서는 1을 사용
         st_name: data.st_name,
         st_contact: data.st_contact,
-        st_address: data.st_address
-      })
+        st_address: data.st_address,
+      }),
     });
-
     return response.json();
   },
 
   // 학생 상세 정보 조회
   getStudent: async (id: string): Promise<Student> => {
+    const token = getToken();
+    if (!token) throw new Error("인증이 필요합니다");
+
     try {
       const response = await fetch(`${API_BASE_URL}/student/${id}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${TEST_TOKEN}`,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        console.error('API 응답 에러:', response.status, errorData);
+        console.error("API 응답 에러:", response.status, errorData);
         throw new Error(`학생 상세 정보 조회 실패: ${response.status}`);
       }
 
       const data = await response.json();
       return data;
     } catch (error) {
-      console.error('학생 상세 정보 조회 중 에러 발생:', error);
+      console.error("학생 상세 정보 조회 중 에러 발생:", error);
       throw error;
     }
   },
@@ -108,7 +141,7 @@ export const studentService = {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${TEST_TOKEN}`
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify(data)
     });
@@ -122,24 +155,27 @@ export const studentService = {
         id,
         name: data.st_name,
         phone: data.st_contact,
-        address: data.st_address
-      }
+        address: data.st_address,
+      },
     };
   },
 
   // 학생 삭제
   deleteStudent: async (id: string) => {
+    const token = getToken();
+    if (!token) return;
+
     const response = await fetch(`${API_BASE_URL}/student/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Authorization': `Bearer ${TEST_TOKEN}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.json();
-    
+
     // 임시 응답
     return {
-      success: true
+      success: true,
     };
-  }
-}; 
+  },
+};

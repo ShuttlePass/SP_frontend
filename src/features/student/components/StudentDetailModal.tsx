@@ -16,6 +16,14 @@ interface FormErrors {
   name?: string;
   phone?: string;
   address?: string;
+  area_idx?: string;
+}
+
+interface FormData {
+  name: string;
+  phone: string;
+  address: string;
+  area_idx: number;
 }
 
 const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
@@ -24,10 +32,11 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
   onClose,
   onSave
 }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     phone: '',
-    address: ''
+    address: '',
+    area_idx: 0
   });
   const [hasChanges, setHasChanges] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -39,7 +48,8 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
       setFormData({
         name: student.name,
         phone: student.phone,
-        address: student.address
+        address: student.address,
+        area_idx: student.area_idx
       });
       setHasChanges(false);
     } else {
@@ -47,9 +57,10 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
       setFormData({
         name: '',
         phone: '',
-        address: ''
+        address: '',
+        area_idx: 0
       });
-      setHasChanges(true); // 등록 모드에서는 항상 저장 가능하도록
+      setHasChanges(true);
     }
   }, [student]);
 
@@ -58,6 +69,10 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
     
     if (!formData.name.trim()) {
       newErrors.name = '이름을 입력해주세요';
+    }
+    
+    if (!formData.area_idx) {
+      newErrors.area_idx = '지역을 선택해주세요';
     }
     
     if (!formData.phone.trim()) {
@@ -88,15 +103,23 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
     }
     
     onSave({
-      ...(student || { id: '' }),
-      ...formData
+      id: student?.id || '',
+      name: formData.name,
+      phone: formData.phone,
+      address: formData.address,
+      area_idx: formData.area_idx
     });
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
-    if (name === 'phone') {
+    if (name === 'area_idx') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: parseInt(value) || 0
+      }));
+    } else if (name === 'phone') {
       const phoneNumber = value.replace(/[^0-9]/g, '');
       let formattedNumber = '';
       
@@ -129,13 +152,14 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
     if (student) {
       const newFormData = {
         ...formData,
-        [name]: value
+        [name]: name === 'area_idx' ? (parseInt(value) || 0) : value
       };
       
       setHasChanges(
         newFormData.name !== student.name ||
         newFormData.phone !== student.phone ||
-        newFormData.address !== student.address
+        newFormData.address !== student.address ||
+        newFormData.area_idx !== student.area_idx
       );
     }
   };
@@ -153,6 +177,7 @@ const StudentDetailModal: React.FC<StudentDetailModalProps> = ({
           name={formData.name}
           phone={formData.phone}
           address={formData.address}
+          area_idx={formData.area_idx}
           isEditing={true}
           onChange={handleChange}
           errors={errors}

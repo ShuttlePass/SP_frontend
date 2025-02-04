@@ -52,10 +52,10 @@ const StudentPage = () => {
   const [showCourseManagement, setShowCourseManagement] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
 
-  // 전체 학생 목록 조회
-  const { data: students } = useQuery<Student[]>({
-    queryKey: ["students"],
-    queryFn: () => studentService.getStudents(),
+  // 학생 목록 조회
+  const { data: students = [] } = useQuery({
+    queryKey: ['students'],
+    queryFn: studentService.getStudents
   });
 
   // 학생별 수업 목록 조회 수정
@@ -119,39 +119,44 @@ const StudentPage = () => {
 
   const handleStudentUpdate = async (updatedStudent: Student) => {
     try {
+      console.log('수정할 학생 데이터:', updatedStudent); // 수정 데이터 로깅
+
       await studentService.updateStudent(updatedStudent.id, {
         st_name: updatedStudent.name,
         st_contact: updatedStudent.phone,
         st_address: updatedStudent.address,
+        area_idx: updatedStudent.area_idx
       });
-      await queryClient.invalidateQueries({ queryKey: ["students"] });
+
+      // 학생 목록 캐시 무효화 및 재조회
+      await queryClient.invalidateQueries({ queryKey: ['students'] });
+      
       setShowDetailModal(false);
-      setAlertMessage("수정되었습니다.");
-      setShowAlert(true);
+      setSelectedStudent(null);
     } catch (error) {
-      console.error("수정 실패:", error);
-      setAlertMessage("수정 중 오류가 발생했습니다.");
-      setShowAlert(true);
+      console.error('학생 정보 수정 실패:', error);
+      alert('학생 정보 수정에 실패했습니다.');
     }
   };
 
-  const handleStudentRegister = async (studentData: Omit<Student, "id">) => {
+  const handleStudentRegister = async (newStudent: Student) => {
     try {
+      console.log('등록할 학생 데이터:', newStudent); // 등록 데이터 로깅
+
       await studentService.registerStudent({
-        area_idx: 1,
-        st_name: studentData.name,
-        st_contact: studentData.phone,
-        st_address: studentData.address,
+        st_name: newStudent.name,
+        st_contact: newStudent.phone,
+        st_address: newStudent.address,
+        area_idx: newStudent.area_idx
       });
-      await queryClient.invalidateQueries({ queryKey: ["students"] });
+
+      // 학생 목록 캐시 무효화 및 재조회
+      await queryClient.invalidateQueries({ queryKey: ['students'] });
+      
       setShowRegisterModal(false);
-      setAlertMessage("등록되었습니다.");
-      setShowAlert(true);
     } catch (error) {
-      console.error("등록 실패:", error);
-      const apiError = error as ApiError;
-      setAlertMessage(apiError.message || "등록 중 오류가 발생했습니다.");
-      setShowAlert(true);
+      console.error('학생 등록 실패:', error);
+      alert('학생 등록에 실패했습니다.');
     }
   };
 

@@ -10,6 +10,7 @@ interface Student {
   name: string;
   phone: string;
   address: string;
+  area_idx: number;
 }
 
 interface StudentResponse {
@@ -17,9 +18,10 @@ interface StudentResponse {
   st_name: string;
   st_contact: string;
   st_address: string;
+  area_idx: number;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_SERVER_URL;
+const API_SERVER_URL = import.meta.env.VITE_API_SERVER_URL;
 
 // 토큰을 가져오는 함수
 const getToken = () => {
@@ -38,10 +40,10 @@ export const studentService = {
       const token = getToken();
       if (!token) return [];
 
-      console.log("API URL:", `${API_BASE_URL}/student`);
+      console.log("API URL:", `${API_SERVER_URL}/student`);
       console.log("Using token:", token); // 토큰 확인용 로그
 
-      const response = await fetch(`${API_BASE_URL}/student`, {
+      const response = await fetch(`${API_SERVER_URL}/student`, {
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: "application/json",
@@ -76,6 +78,7 @@ export const studentService = {
         name: student.st_name,
         phone: student.st_contact,
         address: student.st_address,
+        area_idx: student.area_idx,
       }));
     } catch (error) {
       console.error("학생 목록 조회 실패:", error);
@@ -85,23 +88,39 @@ export const studentService = {
 
   // 학생 등록
   registerStudent: async (data: StudentRegisterData) => {
-    const token = getToken();
-    if (!token) return;
+    try {
+      const token = getToken();
+      if (!token) return;
 
-    const response = await fetch(`${API_BASE_URL}/student`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        area_idx: 1, // 여기서는 1을 사용
-        st_name: data.st_name,
-        st_contact: data.st_contact,
-        st_address: data.st_address,
-      }),
-    });
-    return response.json();
+      console.log('학생 등록 요청 데이터:', data); // 요청 데이터 로깅
+
+      const response = await fetch(`${API_SERVER_URL}/student`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          area_idx: data.area_idx,
+          st_name: data.st_name,
+          st_contact: data.st_contact,
+          st_address: data.st_address,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('학생 등록 실패 응답:', errorData);
+        throw new Error(errorData.message || '학생 등록에 실패했습니다.');
+      }
+
+      const result = await response.json();
+      console.log('학생 등록 응답:', result); // 응답 데이터 로깅
+      return result;
+    } catch (error) {
+      console.error('학생 등록 에러:', error);
+      throw error;
+    }
   },
 
   // 학생 상세 정보 조회
@@ -110,7 +129,7 @@ export const studentService = {
     if (!token) throw new Error("인증이 필요합니다");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/student/${id}`, {
+      const response = await fetch(`${API_SERVER_URL}/student/${id}`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -126,7 +145,13 @@ export const studentService = {
       }
 
       const data = await response.json();
-      return data;
+      return {
+        id: data.st_idx.toString(),
+        name: data.st_name,
+        phone: data.st_contact,
+        address: data.st_address,
+        area_idx: data.area_idx,
+      };
     } catch (error) {
       console.error("학생 상세 정보 조회 중 에러 발생:", error);
       throw error;
@@ -135,29 +160,39 @@ export const studentService = {
 
   // 학생 정보 수정
   updateStudent: async (id: string, data: Partial<StudentRegisterData>) => {
-    // 실제 API 구현 시 아래 주석 해제
-    /*
-    const response = await fetch(`${API_BASE_URL}/student/${id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(data)
-    });
-    return response.json();
-    */
+    try {
+      const token = getToken();
+      if (!token) return;
 
-    // 임시 응답
-    return {
-      success: true,
-      data: {
-        id,
-        name: data.st_name,
-        phone: data.st_contact,
-        address: data.st_address,
-      },
-    };
+      console.log('학생 정보 수정 요청 데이터:', { id, data }); // 요청 데이터 로깅
+
+      const response = await fetch(`${API_SERVER_URL}/student/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          area_idx: data.area_idx,
+          st_name: data.st_name,
+          st_contact: data.st_contact,
+          st_address: data.st_address,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('학생 정보 수정 실패 응답:', errorData);
+        throw new Error(errorData.message || '학생 정보 수정에 실패했습니다.');
+      }
+
+      const result = await response.json();
+      console.log('학생 정보 수정 응답:', result); // 응답 데이터 로깅
+      return result;
+    } catch (error) {
+      console.error('학생 정보 수정 에러:', error);
+      throw error;
+    }
   },
 
   // 학생 삭제
@@ -165,7 +200,7 @@ export const studentService = {
     const token = getToken();
     if (!token) return;
 
-    const response = await fetch(`${API_BASE_URL}/student/${id}`, {
+    const response = await fetch(`${API_SERVER_URL}/student/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,

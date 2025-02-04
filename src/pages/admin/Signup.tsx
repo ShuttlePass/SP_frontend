@@ -101,14 +101,14 @@ const Signup = () => {
 
   return (
     <FullScreenContainer>
-      <header className="w-full h-[100px] bg-white border-b border-gray-200 shadow-sm">
-        <div className="mt-2 w-full mx-auto flex justify-between items-center py-4 px-6">
+      <header className="h-[100px] w-full border-b border-gray-200 bg-white shadow-sm">
+        <div className="mx-auto mt-2 flex w-full items-center justify-between px-6 py-4">
           <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
         </div>
       </header>
-      <div className="w-full flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
-        <div className="w-full bg-white rounded-lg shadow dark:border sm:max-w-md xl:p-0">
-          <div className="p-6 space-y-4 sm:p-8">
+      <div className="mx-auto flex w-full flex-col items-center justify-center px-6 py-8 md:h-screen lg:py-0">
+        <div className="w-full rounded-lg bg-white shadow sm:max-w-md xl:p-0 dark:border">
+          <div className="space-y-4 p-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight text-black">
               회원가입
             </h1>
@@ -121,7 +121,7 @@ const Signup = () => {
                 <div>
                   <label
                     htmlFor="us_name"
-                    className="block mb-2 text-sm font-medium text-black"
+                    className="mb-2 block text-sm font-medium text-black"
                   >
                     이름
                   </label>
@@ -130,7 +130,7 @@ const Signup = () => {
                     type="text"
                     name="us_name"
                     id="us_name"
-                    className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                     value={formValues.us_name}
                     onChange={handleChange}
                     required
@@ -139,19 +139,21 @@ const Signup = () => {
                 <div>
                   <label
                     htmlFor="company_idx"
-                    className="block mb-2 text-sm font-medium text-black"
+                    className="mb-2 block text-sm font-medium text-black"
                   >
                     회사명
                   </label>
                   <select
                     name="company_idx"
                     id="company_idx"
-                    className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                     value={formValues.company_idx}
                     onChange={(e) =>
                       setFormValues((prev) => ({
                         ...prev,
-                        company_idx: e.target.value ? parseInt(e.target.value) : 0,
+                        company_idx: e.target.value
+                          ? parseInt(e.target.value)
+                          : 0,
                       }))
                     }
                     required
@@ -170,7 +172,7 @@ const Signup = () => {
                 <div>
                   <label
                     htmlFor="us_id"
-                    className="block mb-2 text-sm font-medium text-black"
+                    className="mb-2 block text-sm font-medium text-black"
                   >
                     아이디
                   </label>
@@ -179,7 +181,7 @@ const Signup = () => {
                     type="text"
                     name="us_id"
                     id="us_id"
-                    className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                     value={formValues.us_id}
                     onChange={handleChange}
                     required
@@ -188,7 +190,7 @@ const Signup = () => {
                 <div>
                   <label
                     htmlFor="us_password"
-                    className="block mb-2 text-sm font-medium text-black"
+                    className="mb-2 block text-sm font-medium text-black"
                   >
                     비밀번호
                   </label>
@@ -197,7 +199,7 @@ const Signup = () => {
                     type="password"
                     name="us_password"
                     id="us_password"
-                    className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                     value={formValues.us_password}
                     onChange={handleChange}
                     required
@@ -206,7 +208,7 @@ const Signup = () => {
                 <div>
                   <label
                     htmlFor="us_password_confirm"
-                    className="block mb-2 text-sm font-medium text-black"
+                    className="mb-2 block text-sm font-medium text-black"
                   >
                     비밀번호 (확인)
                   </label>
@@ -215,7 +217,7 @@ const Signup = () => {
                     type="password"
                     name="us_password_confirm"
                     id="us_password_confirm"
-                    className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                     value={formValues.us_password_confirm}
                     onChange={handleChange}
                     required
@@ -224,7 +226,7 @@ const Signup = () => {
                 <div>
                   <label
                     htmlFor="us_contact"
-                    className="block mb-2 text-sm font-medium text-black"
+                    className="mb-2 block text-sm font-medium text-black"
                   >
                     연락처
                   </label>
@@ -233,14 +235,14 @@ const Signup = () => {
                     type="text"
                     name="us_contact"
                     id="us_contact"
-                    className="bg-gray-50 border text-sm rounded-lg block w-full p-2.5 text-black"
+                    className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                     value={formValues.us_contact}
                     onChange={handleChange}
                     required
                   />
                 </div>
                 <div className="mb-4">
-                  <label className="block mb-2 text-sm font-medium text-black">
+                  <label className="mb-2 block text-sm font-medium text-black">
                     * 가입 대상 여부를 선택해주세요 (필수)
                   </label>
                   <div className="flex items-center space-x-4">
@@ -270,7 +272,7 @@ const Signup = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full text-white bg-primary hover:bg-primary-700 rounded-lg text-sm px-5 py-2.5"
+                  className="bg-primary hover:bg-primary-700 w-full rounded-lg px-5 py-2.5 text-sm text-white"
                 >
                   회원가입 완료
                 </button>

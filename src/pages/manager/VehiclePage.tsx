@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import AdminSidebar from "../../components/layout/sidebar";
+import AdminSidebar from "@/features/manager/AdminSidebar";
 import VehicleInfo from "../../features/vehicle/components/VehicleInfo";
 import VehicleRegister from "../../features/vehicle/components/VehicleRegister";
 import { Vehicle } from "../../types/vehicle";

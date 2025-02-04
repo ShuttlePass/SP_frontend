@@ -2,7 +2,7 @@ import { ReactNode } from "react";
 
 interface AuthButtonProps {
   children: ReactNode;
-  onClick?: () => void;
+  onClick: () => void;
 }
 
 const AuthButton = ({ children, onClick }: AuthButtonProps) => {

@@ -28,6 +28,16 @@ interface CompanyResponse {
   data: Company[];
 }
 
+interface ApiError {
+  response?: {
+    status?: number;
+    data?: {
+      message?: string;
+    };
+    headers?: Record<string, string>;
+  };
+}
+
 const Signup = () => {
   const navigate = useNavigate();
   const [formValues, setFormValues] = useState<SignupFormValues>({
@@ -58,8 +68,23 @@ const Signup = () => {
   });
 
   const signupMutation = useMutation({
-    mutationFn: (newUser: Omit<SignupFormValues, "us_password_confirm">) =>
-      api.post("/user", newUser),
+    mutationFn: async (newUser: Omit<SignupFormValues, "us_password_confirm">) => {
+      console.log('회원가입 요청 데이터:', newUser);
+      
+      try {
+        const response = await api.post("/user", newUser);
+        console.log('회원가입 응답:', response.data);
+        return response.data;
+      } catch (error) {
+        const apiError = error as ApiError;
+        console.error('회원가입 에러 상세:', {
+          status: apiError.response?.status,
+          data: apiError.response?.data,
+          headers: apiError.response?.headers
+        });
+        throw error;
+      }
+    },
     onSuccess: () => {
       alert("회원가입이 완료되었습니다.");
       setFormValues({
@@ -74,8 +99,10 @@ const Signup = () => {
       navigate("/signup-complete");
     },
     onError: (error) => {
-      console.error(error);
-      alert("회원가입에 실패했습니다. 다시 시도해주세요.");
+      const apiError = error as ApiError;
+      const errorMessage = apiError.response?.data?.message || "회원가입에 실패했습니다.";
+      console.error('회원가입 실패:', errorMessage);
+      alert(errorMessage);
     },
   });
 
@@ -95,7 +122,19 @@ const Signup = () => {
       return;
     }
 
+    if (!formValues.company_idx) {
+      alert("회사를 선택해주세요.");
+      return;
+    }
+
+    if (!formValues.us_level) {
+      alert("가입 대상 여부를 선택해주세요.");
+      return;
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { us_password_confirm, ...submitData } = formValues;
+    console.log('제출할 데이터:', submitData);
     signupMutation.mutate(submitData);
   };
 

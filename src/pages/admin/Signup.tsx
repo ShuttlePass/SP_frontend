@@ -3,7 +3,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import FullScreenContainer from "../../components/container/FullScreenContainer";
 import logo from "../../assets/img/logo.png";
-import { useNavigate } from "react-router-dom";
 
 interface SignupFormValues {
   us_id: string;
@@ -29,7 +28,6 @@ interface Company {
 }
 
 const Signup = () => {
-  const navigate = useNavigate();
   const [formValues, setFormValues] = useState<SignupFormValues>({
     us_id: "",
     us_password: "",
@@ -52,7 +50,7 @@ const Signup = () => {
     return data;
   };
 
-  const { isLoading, error } = useQuery<CompanyResponse, Error>({
+  const { data, isLoading, error } = useQuery<CompanyResponse, Error>({
     queryKey: ["companies"],
     queryFn: fetchCompanies,
   });
@@ -71,7 +69,6 @@ const Signup = () => {
         us_contact: "",
         us_name: "",
       });
-      navigate("/signup-complete");
     },
     onError: (error) => {
       console.error(error);
@@ -161,7 +158,7 @@ const Signup = () => {
                     <option value="" disabled>
                       회사명을 선택해주세요.
                     </option>
-                    {companyList?.map((company) => (
+                    {companyList.map((company) => (
                       <option key={company.co_co_idx} value={company.co_co_idx}>
                         {company.co_co_name}
                       </option>

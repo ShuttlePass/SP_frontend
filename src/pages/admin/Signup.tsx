@@ -13,11 +13,20 @@ interface SignupFormValues {
   company_idx: number;
   us_contact: string;
   us_name: string;
+  area_idx: number;
 }
 
 interface Company {
   co_idx: number;
   co_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Area {
+  ar_idx: number;
+  company_idx: number;
+  ar_name: string;
   created_at: string;
   updated_at: string;
 }
@@ -48,9 +57,11 @@ const Signup = () => {
     company_idx: 0,
     us_contact: "",
     us_name: "",
+    area_idx: 0,
   });
 
   const [companyList, setCompanyList] = useState<Company[]>([]);
+  const [areaList, setAreaList] = useState<Area[]>([]);
 
   const api = axios.create({
     baseURL: import.meta.env.VITE_API_SERVER_URL,
@@ -60,6 +71,16 @@ const Signup = () => {
     const { data } = await api.get<CompanyResponse>("/list/company?ip=0");
     setCompanyList(data?.data);
     return data;
+  };
+
+  const fetchAreas = async (companyIdx: number) => {
+    try {
+      const { data } = await api.get<{ data: Area[] }>(`/list/area?company_idx=${companyIdx}`);
+      setAreaList(data.data || []);
+    } catch (error) {
+      console.error('지역 목록 조회 실패:', error);
+      setAreaList([]);
+    }
   };
 
   const { isLoading, error } = useQuery<CompanyResponse, Error>({
@@ -97,6 +118,7 @@ const Signup = () => {
         company_idx: 0,
         us_contact: "",
         us_name: "",
+        area_idx: 0,
       });
       navigate("/signup-complete");
     },
@@ -117,6 +139,20 @@ const Signup = () => {
     }));
   };
 
+  const handleCompanyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const companyIdx = parseInt(e.target.value);
+    setFormValues((prev) => ({
+      ...prev,
+      company_idx: companyIdx,
+      area_idx: 0,
+    }));
+    if (companyIdx) {
+      fetchAreas(companyIdx);
+    } else {
+      setAreaList([]);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -132,6 +168,11 @@ const Signup = () => {
 
     if (!formValues.us_level) {
       alert("가입 대상 여부를 선택해주세요.");
+      return;
+    }
+
+    if (!formValues.area_idx) {
+      alert("지역을 선택해주세요.");
       return;
     }
 
@@ -190,14 +231,7 @@ const Signup = () => {
                     id="company_idx"
                     className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
                     value={formValues.company_idx || ""}
-                    onChange={(e) =>
-                      setFormValues((prev) => ({
-                        ...prev,
-                        company_idx: e.target.value
-                          ? parseInt(e.target.value)
-                          : 0,
-                      }))
-                    }
+                    onChange={handleCompanyChange}
                     required
                   >
                     <option value="">회사명을 선택해주세요.</option>
@@ -208,7 +242,34 @@ const Signup = () => {
                     ))}
                   </select>
                 </div>
-
+                <div>
+                  <label
+                    htmlFor="area_idx"
+                    className="mb-2 block text-sm font-medium text-black"
+                  >
+                    지역
+                  </label>
+                  <select
+                    name="area_idx"
+                    id="area_idx"
+                    className="block w-full rounded-lg border bg-gray-50 p-2.5 text-sm text-black"
+                    value={formValues.area_idx || ""}
+                    onChange={(e) =>
+                      setFormValues((prev) => ({
+                        ...prev,
+                        area_idx: e.target.value ? parseInt(e.target.value) : 0,
+                      }))
+                    }
+                    required
+                  >
+                    <option value="">지역을 선택해주세요.</option>
+                    {areaList.map((area) => (
+                      <option key={area.ar_idx} value={area.ar_idx}>
+                        {area.ar_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label
                     htmlFor="us_id"

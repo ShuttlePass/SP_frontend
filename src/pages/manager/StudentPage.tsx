@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import AdminSidebar from "../../components/layout/sidebar";
+import AdminSidebar from "@/features/manager/AdminSidebar";
 import Button from "../../components/common/Button";
 import { studentService } from "../../services/studentService";
 import { mockCourseService } from "../../mocks/data";

@@ -1,9 +1,9 @@
 import FullScreenContainer from "@/components/container/FullScreenContainer";
 import logo from "../../assets/img/logo.png";
-import api from '../../services/api';
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { api } from '@/api/axios';
 
 interface LoginFormValues {
   us_id: string;
@@ -20,6 +20,14 @@ interface LoginResponse {
   message: string;
   code: number;
   data: string;  // JWT 토큰
+}
+
+interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
 }
 
 const SignIn = () => {
@@ -51,12 +59,13 @@ const SignIn = () => {
           ...response.data,
           selectedLevel: credentials.us_level
         };
-      } catch (error: any) {
-        console.error('Login error details:', error.response?.data);
+      } catch (error) {
+        const apiError = error as ApiError;
+        console.error('Login error details:', apiError.response?.data);
         throw error;
       }
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       // UI에서 선택한 레벨로 페이지 이동
       const userLevel = formValues.us_level;
       console.log('Selected user level:', userLevel);
@@ -75,9 +84,10 @@ const SignIn = () => {
           alert('사용자 권한을 확인할 수 없습니다.');
       }
     },
-    onError: (error: any) => {
+    onError: (error) => {
+      const apiError = error as ApiError;
       console.error('로그인 실패:', error);
-      const errorMessage = error.response?.data?.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
+      const errorMessage = apiError.response?.data?.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
       alert(errorMessage);
     }
   });

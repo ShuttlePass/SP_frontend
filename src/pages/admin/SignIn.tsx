@@ -1,42 +1,85 @@
 import FullScreenContainer from "@/components/container/FullScreenContainer";
 import logo from "../../assets/img/logo.png";
-import axios from "axios";
+import api from '../../services/api';
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-interface SignInFormValues {
+interface LoginFormValues {
+  us_id: string;
+  us_password: string;
+  us_level: string;  // UI 용도로만 사용
+}
+
+interface LoginRequest {
   us_id: string;
   us_password: string;
 }
 
+interface LoginResponse {
+  message: string;
+  code: number;
+  data: string;  // JWT 토큰
+}
+
 const SignIn = () => {
   const navigate = useNavigate();
-  const [formValues, setFormValues] = useState<SignInFormValues>({
+  const [formValues, setFormValues] = useState<LoginFormValues>({
     us_id: "",
     us_password: "",
+    us_level: "manager",
   });
 
-  const api = axios.create({
-    baseURL: import.meta.env.VITE_API_SERVER_URL,
-  });
+  const loginMutation = useMutation({
+    mutationFn: async (credentials: LoginFormValues) => {
+      try {
+        const requestData: LoginRequest = {
+          us_id: credentials.us_id,
+          us_password: credentials.us_password
+        };
+        
+        const response = await api.post<LoginResponse>('/user/login', requestData);
+        
+        if (response.data.code !== 1) {
+          throw new Error(response.data.message || '로그인에 실패했습니다.');
+        }
 
-  const signupMutation = useMutation({
-    mutationFn: (newUser: Omit<SignInFormValues, "us_password_confirm">) =>
-      api.post("/user/login", newUser),
-    onSuccess: () => {
-      alert("로그인이 완료되었습니다.");
-      localStorage.setItem("isLoggedIn", "true");
-      setFormValues({
-        us_id: "",
-        us_password: "",
-      });
-      navigate("/");
+        // 토큰 저장
+        localStorage.setItem('token', response.data.data);
+        
+        return {
+          ...response.data,
+          selectedLevel: credentials.us_level
+        };
+      } catch (error: any) {
+        console.error('Login error details:', error.response?.data);
+        throw error;
+      }
     },
-    onError: (error) => {
-      console.error(error);
-      alert("로그인에 실패했습니다. 다시 시도해주세요.");
+    onSuccess: (data) => {
+      // UI에서 선택한 레벨로 페이지 이동
+      const userLevel = formValues.us_level;
+      console.log('Selected user level:', userLevel);
+      
+      switch(userLevel) {
+        case 'manager':
+          alert('관리자로 로그인되었습니다.');
+          navigate('/admin/students');
+          break;
+        case 'driver':
+          alert('기사로 로그인되었습니다.');
+          navigate('/driver/schedule');
+          break;
+        default:
+          console.error('Unknown user level:', userLevel);
+          alert('사용자 권한을 확인할 수 없습니다.');
+      }
     },
+    onError: (error: any) => {
+      console.error('로그인 실패:', error);
+      const errorMessage = error.response?.data?.message || '로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.';
+      alert(errorMessage);
+    }
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,8 +92,7 @@ const SignIn = () => {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const { ...submitData } = formValues;
-    signupMutation.mutate(submitData);
+    loginMutation.mutate(formValues);
   };
 
   return (
@@ -112,8 +154,8 @@ const SignIn = () => {
                       type="radio"
                       name="us_level"
                       value="manager"
-                      // checked={formValues.us_level === "manager"}
-                      // onChange={handleChange}
+                      checked={formValues.us_level === "manager"}
+                      onChange={handleChange}
                       className="mr-2"
                     />
                     관리자
@@ -123,8 +165,8 @@ const SignIn = () => {
                       type="radio"
                       name="us_level"
                       value="driver"
-                      // checked={formValues.us_level === "driver"}
-                      // onChange={handleChange}
+                      checked={formValues.us_level === "driver"}
+                      onChange={handleChange}
                       className="mr-2"
                     />
                     기사

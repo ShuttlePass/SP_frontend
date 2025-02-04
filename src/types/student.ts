@@ -59,4 +59,5 @@ export interface Student {
   name: string;
   phone: string;
   address: string;
+  area_idx: number;
 }

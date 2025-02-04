@@ -19,7 +19,7 @@ interface StudentResponse {
   st_address: string;
 }
 
-const API_BASE_URL = 'http://52.78.63.46:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 //토큰 수정 필요 시 수정
 const TEST_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c19pZHgiOjEwLCJjb21wYW55X2lkeCI6MSwidXNfbGV2ZWwiOiJtYW5hZ2VyIiwiaWF0IjoxNzM4NTQyNTQxLCJleHAiOjE3Mzg2Mjg5NDF9.yLmZ7tAhfnNXDtl9cqkxtqoaFacRGA0lDkg39p2rcwk';

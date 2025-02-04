@@ -1,13 +1,30 @@
+export interface Area {
+  sa_idx: number;
+  shuttle_idx: number;
+  area_idx: number;
+  ar_name: string;
+}
+
 export interface Vehicle {
-  id: string;
-  number: string;    
-  name: string;      
-  phone: string;      
-  type: '등원' | '하원';      
-  instructor: string;  
-  contact: string;     
-  route: string;   
-  stops: BusStop[];   
+  sh_name: string;
+  sh_state: number;
+  sh_max_cnt: number;
+  sh_idx: number;
+  us_idx: number | null;
+  us_name: string | null;
+  us_contact: string | null;
+  areas: Area[];
+}
+
+export interface VehicleResponse {
+  message: string;
+  code: number;
+  data: Vehicle[];
+  pageInfo: {
+    size: number;
+    page: number;
+    total_count: number;
+  };
 }
 
 export interface BusStop {

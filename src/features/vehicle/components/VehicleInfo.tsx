@@ -1,5 +1,5 @@
-import React from 'react';
-import { Vehicle } from '../../../types/vehicle';
+import React from "react";
+import { Vehicle } from "../../../types/vehicle";
 
 interface VehicleInfoProps {
   vehicles: Vehicle[];
@@ -7,49 +7,66 @@ interface VehicleInfoProps {
   onRegisterClick: () => void;
 }
 
-const VehicleInfo: React.FC<VehicleInfoProps> = ({ 
-  vehicles, 
-  onVehicleSelect, 
-  onRegisterClick 
+const VehicleInfo: React.FC<VehicleInfoProps> = ({
+  vehicles,
+  onVehicleSelect,
+  onRegisterClick,
 }) => {
+  const getStatusText = (vehicle: Vehicle) => {
+    return vehicle.us_idx ? (
+      <span className="font-medium text-blue-600">배정 완료</span>
+    ) : (
+      <span className="font-medium text-gray-600">배정 안됨</span>
+    );
+  };
+
   return (
-    <div className="p-6 mr-4 bg-white border-2 border-[#B0B8C1] rounded-lg shadow-md w-[740px]">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-bold">차량 목록</h2>
+    <div className="mr-8 w-96">
+      <div className="mb-4 flex justify-end">
         <button
           onClick={onRegisterClick}
-          className="px-4 py-2 bg-primary text-white rounded hover:bg-blue-600"
+          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
         >
           차량 등록
         </button>
       </div>
-
-      <table className="w-full">
-        <thead>
-          <tr>
-            <th className="py-2 px-4 text-left border-b-2">호차</th>
-            <th className="py-2 px-4 text-left border-b-2">등/하원</th>
-            <th className="py-2 px-4 text-left border-b-2">기사</th>
-            <th className="py-2 px-4 text-left border-b-2">연락처</th>
-          </tr>
-        </thead>
-        <tbody>
+      <div className="h-[calc(100vh-12rem)] overflow-y-auto">
+        <div className="space-y-4">
           {vehicles.map((vehicle) => (
-            <tr 
-              key={vehicle.id}
+            <div
+              key={vehicle.sh_idx}
+              className="cursor-pointer rounded border p-4 hover:bg-gray-50"
               onClick={() => onVehicleSelect(vehicle)}
-              className="hover:bg-gray-50 cursor-pointer"
             >
-              <td className="py-2 px-4">{vehicle.number}</td>
-              <td className="py-2 px-4">{vehicle.type}</td>
-              <td className="py-2 px-4">{vehicle.name}</td>
-              <td className="py-2 px-4">{vehicle.phone}</td>
-            </tr>
+              <h3 className="text-lg font-medium">{vehicle.sh_name}</h3>
+              <p className="text-sm text-gray-600">
+                최대 인원: {vehicle.sh_max_cnt}명
+              </p>
+              <p className="text-sm text-gray-600">
+                상태: {getStatusText(vehicle)}
+              </p>
+              {vehicle.us_idx && (
+                <p className="text-sm text-gray-600">기사: {vehicle.us_name}</p>
+              )}
+              <div className="mt-2">
+                <p className="text-sm font-medium text-gray-600">담당 지역:</p>
+                <div className="flex flex-wrap gap-1">
+                  {vehicle.areas.map((area) => (
+                    <span
+                      key={area.sa_idx}
+                      className="rounded-full bg-gray-200 px-2 py-1 text-xs"
+                    >
+                      {area.ar_name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
           ))}
-        </tbody>
-      </table>
+        </div>
+      </div>
     </div>
   );
 };
 
-export default VehicleInfo; 
+export default VehicleInfo;

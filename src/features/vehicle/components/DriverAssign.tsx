@@ -27,7 +27,6 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
-  const [searchKeyword, setSearchKeyword] = useState("");
 
   // 기사 목록 가져오기
   useEffect(() => {
@@ -54,14 +53,6 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
     fetchDrivers();
   }, []);
 
-  // 기사 검색 필터링
-  const filteredDrivers = drivers.filter(
-    (driver) =>
-      driver.us_name.includes(searchKeyword) ||
-      driver.us_contact.includes(searchKeyword) ||
-      driver.us_id.includes(searchKeyword),
-  );
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDriver) return;
@@ -75,11 +66,7 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
         us_idx: selectedDriver.us_idx,
       };
 
-      // baseURL이 올바르게 설정되어 있는지 확인
-      console.log('Sending request to:', `${import.meta.env.VITE_API_SERVER_URL}/shuttle/driver`);
-      
       const response = await api.put("/shuttle/driver", driverAssignData);
-      
       if (response.data.code === 1) {
         onSubmit(response.data);
         onClose();
@@ -91,7 +78,7 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
       setError(
         err.response?.data?.message ||
           err.message ||
-          "기사 배정에 실패했습니다. 네트워크 연결을 확인해주세요."
+          "기사 배정에 실패했습니다. 네트워크 연결을 확인해주세요.",
       );
     } finally {
       setIsLoading(false);
@@ -113,7 +100,7 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* 차량 정보 표시 */}
         <div>
           <h3 className="mb-2 font-medium">차량 정보</h3>
@@ -123,29 +110,20 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
           </div>
         </div>
 
-        {/* 기사 검색 및 선택 */}
+        {/* 기사 목록 */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
-            배정할 기사 선택
-          </label>
-          <input
-            type="text"
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-            className="w-full rounded border p-2"
-            placeholder="기사 이름, ID 또는 연락처 검색"
-          />
-
-          {searchKeyword && (
-            <div className="mt-2 max-h-48 overflow-y-auto rounded border">
-              {filteredDrivers.map((driver) => (
+          <h3 className="mb-2 font-medium">기사 정보</h3>
+          <div className="h-[calc(100vh-24rem)] overflow-y-auto rounded border">
+            <div className="space-y-2 p-2">
+              {drivers.map((driver) => (
                 <div
                   key={driver.us_idx}
-                  className="cursor-pointer p-2 hover:bg-gray-100"
-                  onClick={() => {
-                    setSelectedDriver(driver);
-                    setSearchKeyword("");
-                  }}
+                  className={`cursor-pointer rounded p-3 hover:bg-gray-50 ${
+                    selectedDriver?.us_idx === driver.us_idx
+                      ? "bg-blue-50 ring-2 ring-blue-500"
+                      : ""
+                  }`}
+                  onClick={() => setSelectedDriver(driver)}
                 >
                   <div className="font-medium">{driver.us_name}</div>
                   <div className="text-sm text-gray-500">
@@ -156,34 +134,16 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
                   </div>
                 </div>
               ))}
-              {filteredDrivers.length === 0 && (
-                <div className="p-2 text-gray-500">검색 결과가 없습니다</div>
+              {drivers.length === 0 && (
+                <div className="p-4 text-center text-gray-500">
+                  배정 가능한 기사가 없습니다
+                </div>
               )}
             </div>
-          )}
-
-          {selectedDriver && (
-            <div className="mt-2 rounded bg-gray-50 p-3">
-              <div className="font-medium">선택된 기사</div>
-              <div>{selectedDriver.us_name}</div>
-              <div className="text-sm text-gray-500">
-                ID: {selectedDriver.us_id}
-              </div>
-              <div className="text-sm text-gray-500">
-                연락처: {selectedDriver.us_contact}
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedDriver(null)}
-                className="mt-2 text-sm text-red-500"
-              >
-                선택 해제
-              </button>
-            </div>
-          )}
+          </div>
         </div>
 
-        <div className="mt-6 flex justify-end space-x-2">
+        <div className="flex justify-end space-x-2">
           <button
             type="button"
             onClick={onClose}
@@ -205,4 +165,4 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
   );
 };
 
-export default DriverAssign; 
+export default DriverAssign;

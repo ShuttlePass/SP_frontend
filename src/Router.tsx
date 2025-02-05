@@ -3,7 +3,7 @@ import Main from "./pages/admin/Main";
 import Signup from "./pages/admin/Signup";
 import SignupComplete from "./pages/admin/SignupComplete";
 import SignIn from "./pages/admin/SignIn";
-import { Schedule } from "./pages/driver/Schedule";
+import { Schedule } from "./pages/Driver/Schedule";
 import StudentPage from "./pages/manager/StudentPage";
 import ShuttlePage from "./pages/manager/ShuttlePage";
 import VehiclePage from "./pages/manager/VehiclePage";

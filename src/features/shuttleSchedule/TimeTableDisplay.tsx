@@ -80,10 +80,14 @@ export const TimeTableDisplay = ({
   const [areas, setAreas] = useState<ShuttleArea[]>([]);
   const [filteredAreas, setFilteredAreas] = useState<ShuttleArea[]>([]);
 
-  const [selectedStudentIdx, setSelectedStudentIdx] = useState<number | null>(null);
+  const [selectedStudentIdx, setSelectedStudentIdx] = useState<number | null>(
+    null,
+  );
 
   // studentsWithCourses 상태의 타입 지정
-  const [studentsWithCourses, setStudentsWithCourses] = useState<StudentData[]>([]);
+  const [studentsWithCourses, setStudentsWithCourses] = useState<StudentData[]>(
+    [],
+  );
 
   // API 호출 함수
   const fetchShuttleData = async (date: string, type: number) => {
@@ -137,8 +141,8 @@ export const TimeTableDisplay = ({
         const response = await api.get("/list/area", {
           params: {
             ip: 0,
-            ar_name: ""
-          }
+            ar_name: "",
+          },
         });
         console.log("Areas response:", response.data);
 
@@ -160,84 +164,84 @@ export const TimeTableDisplay = ({
       if (!selectedShuttleIdx) return;
 
       try {
-        if (selectedStudentIdx) {
-          // 학생이 선택된 경우 매칭 정보 조회
-          const response = await api.get<{ code: number; data: MatchedArea[] }>('/shuttle/match', {
-            params: {
-              student_idx: selectedStudentIdx
-            }
-          });
-          console.log("Shuttle match response:", response.data);
+        // 선택된 셔틀의 지역 정보 조회
+        const response = await api.get("/vehicle/area", {
+          params: {
+            shuttle_idx: selectedShuttleIdx,
+          },
+        });
 
-          if (response.data.code === 1) {
-            // 선택된 셔틀의 지역 정보만 추출
-            const matchedAreas = response.data.data
-              .filter(item => item.shuttle_idx === selectedShuttleIdx)
-              .map(item => ({
-                sh_name: "",
-                area_idx: item.area_idx,
-                ar_name: item.ar_name
-              }));
+        console.log("Shuttle areas response:", response.data);
 
-            if (matchedAreas.length > 0) {
-              console.log("Matched areas:", matchedAreas);
-              setFilteredAreas(matchedAreas);
-              setSelectedShuttleAreas(matchedAreas.map(area => area.ar_name));
-              return;
-            }
+        if (response.data.code === 1) {
+          const shuttleAreas = response.data.data.map((area: any) => ({
+            sh_name: area.sh_name,
+            area_idx: area.area_idx,
+            ar_name: area.ar_name,
+          }));
+
+          if (shuttleAreas.length > 0) {
+            console.log("Shuttle areas:", shuttleAreas);
+            setFilteredAreas(shuttleAreas);
+            setSelectedShuttleAreas(shuttleAreas.map((area) => area.ar_name));
+            return;
           }
         }
 
-        // 학생이 선택되지 않았거나 매칭된 지역이 없는 경우 전체 지역 목록 사용
-        const defaultAreas = areas.slice(0, 3).map(area => ({
+        // 지역 정보가 없는 경우 전체 지역 목록 사용
+        const defaultAreas = areas.map((area) => ({
           sh_name: "",
           area_idx: area.area_idx,
-          ar_name: area.ar_name
+          ar_name: area.ar_name,
         }));
         console.log("Default areas:", defaultAreas);
         setFilteredAreas(defaultAreas);
-        setSelectedShuttleAreas(defaultAreas.map(area => area.ar_name));
-
+        setSelectedShuttleAreas(defaultAreas.map((area) => area.ar_name));
       } catch (error) {
         console.error("셔틀 지역 조회 실패:", error);
-        // 에러 시 전체 지역 목록의 처음 3개 지역 사용
-        const defaultAreas = areas.slice(0, 3).map(area => ({
+        // 에러 시 전체 지역 목록 사용
+        const defaultAreas = areas.map((area) => ({
           sh_name: "",
           area_idx: area.area_idx,
-          ar_name: area.ar_name
+          ar_name: area.ar_name,
         }));
         setFilteredAreas(defaultAreas);
-        setSelectedShuttleAreas(defaultAreas.map(area => area.ar_name));
+        setSelectedShuttleAreas(defaultAreas.map((area) => area.ar_name));
       }
     };
 
     fetchShuttleAreas();
-  }, [selectedShuttleIdx, selectedStudentIdx, areas]);  // selectedStudentIdx 의존성 추가
+  }, [selectedShuttleIdx, areas]); // selectedStudentIdx 의존성 제거
 
   // 데이터 변환 함수
-  const convertToRoutes = useCallback((shuttleData: ShuttleData[]): BusRoute[] => {
-    return shuttleData
-      .filter((shuttle) => shuttle.sh_state === 1 || shuttle.sh_state === 2)
-      .map((shuttle) => ({
-        id: shuttle.sh_idx.toString(),
-        carName: shuttle.sh_name,
-        timeSlots: shuttle.times
-          .filter((time) =>
-            shuttleType === "pickup" ? time.st_type === 1 : time.st_type === 2,
-          )
-          .sort((a, b) => {
-            // 시간 문자열을 비교하여 오름차순 정렬 (이른 시간이 먼저 오도록)
-            const timeA = a.st_time.substring(0, 5);
-            const timeB = b.st_time.substring(0, 5);
-            return timeA.localeCompare(timeB);
-          })
-          .map((time) => ({
-            time: time.st_time.substring(0, 5),
-            passengers: [], // 서버에서 받은 cnt 값 사용
-            passengerCount: parseInt(time.cnt) || 0, // cnt 값을 숫자로 변환하여 사용
-          })),
-      }));
-  }, [shuttleType]);
+  const convertToRoutes = useCallback(
+    (shuttleData: ShuttleData[]): BusRoute[] => {
+      return shuttleData
+        .filter((shuttle) => shuttle.sh_state === 1 || shuttle.sh_state === 2)
+        .map((shuttle) => ({
+          id: shuttle.sh_idx.toString(),
+          carName: shuttle.sh_name,
+          timeSlots: shuttle.times
+            .filter((time) =>
+              shuttleType === "pickup"
+                ? time.st_type === 1
+                : time.st_type === 2,
+            )
+            .sort((a, b) => {
+              // 시간 문자열을 비교하여 오름차순 정렬 (이른 시간이 먼저 오도록)
+              const timeA = a.st_time.substring(0, 5);
+              const timeB = b.st_time.substring(0, 5);
+              return timeA.localeCompare(timeB);
+            })
+            .map((time) => ({
+              time: time.st_time.substring(0, 5),
+              passengers: [], // 서버에서 받은 cnt 값 사용
+              passengerCount: parseInt(time.cnt) || 0, // cnt 값을 숫자로 변환하여 사용
+            })),
+        }));
+    },
+    [shuttleType],
+  );
 
   // 날짜나 셔틀 타입이 변경될 때마다 데이터 fetch
   useEffect(() => {
@@ -259,7 +263,7 @@ export const TimeTableDisplay = ({
     );
     if (selectedShuttle) {
       setSelectedShuttleIdx(selectedShuttle.sh_idx);
-      setSelectedShuttleAreas(filteredAreas.map(area => area.ar_name));
+      setSelectedShuttleAreas(filteredAreas.map((area) => area.ar_name));
       const selectedTimeData = selectedShuttle.times.find((t) =>
         t.st_time.startsWith(time),
       );
@@ -336,14 +340,19 @@ export const TimeTableDisplay = ({
       }
 
       try {
-        const formattedDate = new Date(selectedDate).toISOString().split('T')[0];
+        const formattedDate = new Date(selectedDate)
+          .toISOString()
+          .split("T")[0];
 
-        const response = await api.get<{ code: number; data: MatchedItem[] }>('/shuttle/match', {
-          params: {
-            student_idx: selectedStudentIdx,
-            date: formattedDate
-          }
-        });
+        const response = await api.get<{ code: number; data: MatchedItem[] }>(
+          "/shuttle/match",
+          {
+            params: {
+              student_idx: selectedStudentIdx,
+              date: formattedDate,
+            },
+          },
+        );
 
         if (response.data.code === 1) {
           const studentData = response.data.data.map((item) => ({
@@ -353,7 +362,7 @@ export const TimeTableDisplay = ({
             area_idx: item.area_idx,
             area_name: item.ar_name,
             max_count: item.sh_max_cnt,
-            state: item.sh_state
+            state: item.sh_state,
           }));
 
           setStudentsWithCourses(studentData);

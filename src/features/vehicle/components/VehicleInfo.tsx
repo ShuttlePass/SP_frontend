@@ -62,8 +62,8 @@ const VehicleInfo: React.FC<VehicleInfoProps> = ({
                       배정 완료
                     </span>
                   ) : (
-                    <span className="inline-flex rounded-full bg-gray-100 px-2 text-xs font-semibold leading-5 text-gray-800">
-                      미배정
+                    <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
+                      기사 미배정
                     </span>
                   )}
                 </td>

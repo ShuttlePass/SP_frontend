@@ -19,11 +19,11 @@ const PassengerList = ({
 
   const fetchPassengers = async () => {
     if (!selectedShuttleIdx || !selectedTimeIdx) return;
-    
+
     setIsLoading(true);
     try {
-      const formattedDate = new Date(selectedDate).toISOString().split('T')[0];
-      
+      const formattedDate = new Date(selectedDate).toISOString().split("T")[0];
+
       const response = await fetch(
         `${import.meta.env.VITE_API_SERVER_URL}/shuttle/reservation/student?date=${formattedDate}&shuttle_idx=${selectedShuttleIdx}&shuttle_time_idx=${selectedTimeIdx}`,
         {
@@ -34,9 +34,9 @@ const PassengerList = ({
       );
 
       if (!response.ok) {
-        console.error('Response status:', response.status);
+        console.error("Response status:", response.status);
         const errorData = await response.json();
-        console.error('Error data:', errorData);
+        console.error("Error data:", errorData);
         throw new Error(errorData.message || "서버에러");
       }
 
@@ -84,7 +84,9 @@ const PassengerList = ({
                   <div className="px-4 text-center">{passenger.st_name}</div>
                   <div className="px-4 text-center">{passenger.st_contact}</div>
                   <div className="px-4 text-center">{passenger.sr_address}</div>
-                  <div className="px-4 text-center">{passenger.st_time.substring(0, 5)}</div>
+                  <div className="px-4 text-center">
+                    {passenger.st_time.substring(0, 5)}
+                  </div>
                 </li>
               ))}
             </ul>

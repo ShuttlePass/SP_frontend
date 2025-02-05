@@ -74,7 +74,7 @@ export const StudentList = ({
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }
+        },
       );
 
       if (!response.ok) return;
@@ -134,7 +134,7 @@ export const StudentList = ({
   };
 
   const getAreaName = (areaIdx: number) => {
-    const area = areas.find(area => area.ar_idx === areaIdx);
+    const area = areas.find((area) => area.ar_idx === areaIdx);
     return area?.ar_name || "";
   };
 

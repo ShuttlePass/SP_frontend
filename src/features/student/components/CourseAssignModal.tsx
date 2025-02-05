@@ -76,14 +76,26 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
     queryFn: async () => {
       if (!selectedCourseType) return [];
       const response = await courseService.getCourseSchedules();
-      return response?.data?.filter(schedule => schedule.cn_name === selectedCourseType) || [];
+      const filteredSchedules = response?.data?.filter(schedule => schedule.cn_name === selectedCourseType) || [];
+      
+      // 시간표가 없는 경우 처리
+      if (filteredSchedules.length === 0) {
+        setAlertMessage(`'${selectedCourseType}' 수업에 등록된 시간표가 없습니다. 먼저 시간표를 등록해주세요.`);
+        setShowAlert(true);
+        setSelectedCourseType(''); // 수업 선택 초기화
+      }
+      
+      return filteredSchedules;
     },
     enabled: !!selectedCourseType
   });
 
   // 시간대 목록 생성
   const availableTimes = schedules?.map(schedule => {
-    if (!schedule.cl_start_at || !schedule.cl_end_at) return null;
+    if (!schedule.cl_start_at || !schedule.cl_end_at) {
+      console.warn('시간 정보가 없는 시간표가 있습니다:', schedule);
+      return null;
+    }
 
     try {
       // 시간 형식 변환 (HH:MM:SS -> HH:MM)
@@ -106,6 +118,7 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
 
       return {
         classes_idx: schedule.classes_idx,
+        cd_idx: schedule.cd_idx,  // cd_idx 추가
         startTime,
         endTime,
         maxStudents: schedule.cn_max_num,
@@ -158,6 +171,16 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
         return;
       }
 
+      // 선택한 날짜의 요일이 수업 요일과 일치하는지 확인
+      const selectedDayName = selectedDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      const availableDays = selectedSchedule.cd_days.split(',').map(day => day.trim());
+      
+      if (!availableDays.includes(selectedDayName)) {
+        setAlertMessage(`이 수업은 ${availableDays.join(', ')} 요일에만 가능합니다.`);
+        setShowAlert(true);
+        return;
+      }
+
       if (courseToEdit) {
         await courseService.updateStudentCourse({
           classes_idx: Number(courseToEdit.id),
@@ -165,28 +188,6 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
         });
         setAlertMessage('수업이 수정되었습니다.');
       } else {
-        // 요일 인덱스 찾기
-        const dayMap: { [key: string]: number } = {
-          'MON': 1,
-          'TUE': 2,
-          'WED': 3,
-          'THU': 4,
-          'FRI': 5,
-          'SAT': 6,
-          'SUN': 7
-        };
-
-        // 선택된 날짜의 요일 찾기
-        const days = selectedSchedule.cd_days.split(',');
-        const selectedDay = selectedDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
-        const dayIdx = dayMap[selectedDay];
-
-        if (!days.includes(selectedDay)) {
-          setAlertMessage('선택한 날짜는 해당 수업의 요일이 아닙니다.');
-          setShowAlert(true);
-          return;
-        }
-
         try {
           // 날짜를 YYYY-MM-DD 형식으로 변환
           const year = selectedDate.getFullYear();
@@ -196,7 +197,7 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
 
           const response = await courseService.assignStudentCourse({
             student_idx: Number(studentId),
-            classes_day_idx: dayIdx,
+            classes_day_idx: selectedSchedule.cd_idx,
             ce_date: formattedDate
           });
 
@@ -234,6 +235,9 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
 
   const isSubmitDisabled = !selectedCourseType || !selectedDate || selectedTimes.length === 0;
 
+  // 시간표가 있는지 확인하는 함수 추가
+  const hasSchedules = schedules && schedules.length > 0;
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} title={courseToEdit ? "수업 수정" : "수업 배정"}>
@@ -261,6 +265,19 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
             )}
           </div>
 
+          {selectedCourseType && !hasSchedules ? (
+            // 시간표가 없는 경우 메시지 표시
+            <div className="text-center py-8">
+              <div className="text-gray-500 mb-2">
+                '{selectedCourseType}' 수업에 등록된 시간표가 없습니다.
+              </div>
+              <div className="text-sm text-gray-400">
+                관리자에게 문의하여 시간표 등록을 요청해주세요.
+              </div>
+            </div>
+          ) : selectedCourseType ? (
+            // 시간표가 있는 경우 달력과 시간 선택 UI 표시
+            <>
           {/* 달력 */}
           <div>
             <h3 className="text-lg font-medium mb-3">날짜 선택</h3>
@@ -275,12 +292,11 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
           </div>
 
           {/* 시간표 선택 */}
-          {selectedCourseType && (
             <div>
               <h3 className="text-lg font-medium mb-3">시간 선택</h3>
               {isLoadingSchedules ? (
                 <div>시간표 로딩 중...</div>
-              ) : availableTimes.length > 0 ? (
+                ) : (
                 <div className="space-y-2">
                   {availableTimes.map((schedule) => schedule && (
                     <button
@@ -313,16 +329,13 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
                     </button>
                   ))}
                 </div>
-              ) : (
-                <div className="text-gray-500 text-center py-4">
-                  등록된 시간표가 없습니다.
-                </div>
               )}
             </div>
-          )}
+            </>
+          ) : null}
 
-          {/* 선택된 정보 요약 */}
-          {selectedDate && selectedTimes.length > 0 && (
+          {/* 선택된 정보 요약 - 시간표가 있고 선택된 경우만 표시 */}
+          {hasSchedules && selectedDate && selectedTimes.length > 0 && (
             <div className="bg-gray-50 p-4 rounded-lg">
               <h4 className="font-medium text-gray-700 mb-2">선택된 일정</h4>
               <div className="space-y-2">
@@ -354,7 +367,7 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
             <Button
               variant="primary"
               onClick={handleSubmit}
-              disabled={isSubmitDisabled}
+              disabled={isSubmitDisabled || !hasSchedules}
             >
               {courseToEdit ? '수정하기' : '배정하기'}
             </Button>

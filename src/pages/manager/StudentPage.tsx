@@ -190,33 +190,33 @@ const StudentPage = () => {
     }
   };
 
-  // 수업 수정/삭제 핸들러
-  const handleEditCourse = (course: AssignedCourse) => {
-    setSelectedCourseToEdit(course);
-    setShowAssignForm(true);
-  };
+  // // 수업 수정/삭제 핸들러
+  // const handleEditCourse = (course: AssignedCourse) => {
+  //   setSelectedCourseToEdit(course);
+  //   setShowAssignForm(true);
+  // };
 
-  const handleDeleteCourse = (course: AssignedCourse) => {
-    setShowConfirmModal({
-      title: "수업 삭제",
-      message: `${course.type} 수업을 삭제하시겠습니까?`,
-      onConfirm: async () => {
-        try {
-          await courseService.deleteStudentCourse(course.id);
-          await queryClient.invalidateQueries({
-            queryKey: ["assignedCourses", selectedStudent?.id],
-          });
-          setShowConfirmModal(null);
-          setAlertMessage("수업이 삭제되었습니다.");
-          setShowAlert(true);
-        } catch (error) {
-          console.error("수업 삭제 실패:", error);
-          setAlertMessage("수업 삭제 중 오류가 발생했습니다.");
-          setShowAlert(true);
-        }
-      },
-    });
-  };
+  // const handleDeleteCourse = (course: AssignedCourse) => {
+  //   setShowConfirmModal({
+  //     title: "수업 삭제",
+  //     message: `${course.type} 수업을 삭제하시겠습니까?`,
+  //     onConfirm: async () => {
+  //       try {
+  //         await courseService.deleteStudentCourse(course.id);
+  //         await queryClient.invalidateQueries({
+  //           queryKey: ["assignedCourses", selectedStudent?.id],
+  //         });
+  //         setShowConfirmModal(null);
+  //         setAlertMessage("수업이 삭제되었습니다.");
+  //         setShowAlert(true);
+  //       } catch (error) {
+  //         console.error("수업 삭제 실패:", error);
+  //         setAlertMessage("수업 삭제 중 오류가 발생했습니다.");
+  //         setShowAlert(true);
+  //       }
+  //     },
+  //   });
+  // };
 
   // 수업 카드 컴포넌트 수정
   const CourseCard = ({ course }: { course: AssignedCourse }) => (
@@ -228,6 +228,7 @@ const StudentPage = () => {
             {formatDateToKorean(course.date)} {course.startTime}
           </div>
         </div>
+        {/* 수정/삭제 버튼 임시 주석 처리
         <div className="flex items-center gap-2">
           <button
             onClick={(e) => {
@@ -248,6 +249,7 @@ const StudentPage = () => {
             삭제
           </button>
         </div>
+        */}
       </div>
     </div>
   );

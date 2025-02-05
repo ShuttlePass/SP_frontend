@@ -40,17 +40,6 @@ interface CourseScheduleResponse {
   };
 }
 
-interface CourseRegisterData {
-  name: string;
-  maxStudents: number;
-}
-
-interface Course {
-  id: number;
-  name: string;
-  maxStudents: number;
-}
-
 interface CreateScheduleData {
   classes_name_idx: number;
   cl_start_at: string;
@@ -58,11 +47,35 @@ interface CreateScheduleData {
   cd_days: string[];
 }
 
-// 임시 모킹 데이터
-const MOCK_COURSES = [
-  { id: 1, name: '기능 교육', maxStudents: 1 },
-  { id: 2, name: '필기 시험', maxStudents: 15 }
-];
+export interface StudentCourseResponse {
+  message: string;
+  code: number;
+  data: {
+    ce_idx: number;          // 수업 배정 ID
+    student_idx: number;     // 학생 ID
+    ce_date: string;         // 수업 날짜
+    classes_idx: number;     // 수업 ID
+    cn_name: string;         // 수업 이름
+    cl_start_at: string;     // 시작 시간
+    cl_end_at: string;       // 종료 시간
+  }[];
+}
+
+interface AssignCourseData {
+  student_idx: number;
+  classes_day_idx: number;
+  ce_date: string;
+}
+
+interface UpdateStudentCourseData {
+  classes_idx: number;
+  new_classes_idx: number;
+}
+
+interface AssignCourseResponse {
+  message: string;
+  code: number;  // 1: 성공, -104: 시간 겹침
+}
 
 // 토큰을 가져오는 함수
 const getToken = () => {
@@ -80,40 +93,80 @@ export const courseService = {
     const token = getToken();
     if (!token) return;
 
-    const response = await api.post('/classes/name', data, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
-    return response.data;
-  },
-
-  // 수업 목록 조회 (모킹)
-  getCourses: async (): Promise<Course[]> => {
-    return Promise.resolve(MOCK_COURSES);
-  },
-
-  // 수업 삭제 (모킹)
-  deleteCourse: async (courseId: number) => {
-    // 모킹 데이터에서 해당 수업 제거
-    const index = MOCK_COURSES.findIndex(course => course.id === courseId);
-    if (index !== -1) {
-      MOCK_COURSES.splice(index, 1);
+    try {
+      const response = await api.post('/classes/name', data, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('수업 등록 응답:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('수업 등록 에러:', error);
+      throw error;
     }
-
-    return Promise.resolve({
-      message: "수업 삭제 성공",
-      code: 1
-    });
   },
 
-  // 수업 수정 (모킹)
-  updateCourse: async (courseId: number, data: CourseRegisterData) => {
-    return Promise.resolve({
-      message: "수업 수정 성공",
-      code: 1,
-      data: { id: courseId, ...data }
-    });
+  // 수업 수정
+  updateCourse: async (courseId: number, data: { cn_name: string; cn_max_num: number }) => {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await api.put(`/classes/name/${courseId}`, data, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('수업 수정 응답:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('수업 수정 에러:', error);
+      throw error;
+    }
+  },
+
+  // 수업 삭제
+  deleteCourse: async (courseId: number) => {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await api.delete(`/classes/name/${courseId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('수업 삭제 응답:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('수업 삭제 에러:', error);
+      throw error;
+    }
+  },
+
+  // 수업 목록 조회
+  getCourses: async () => {
+    const token = getToken();
+    if (!token) return [];
+
+    try {
+      const response = await api.get<CourseNameResponse>('/classes/name', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('수업 목록 조회 응답:', response.data);
+
+      return response.data.data.map(course => ({
+        id: course.cn_idx,
+        name: course.cn_name,
+        maxStudents: course.cn_max_num
+      }));
+    } catch (error) {
+      console.error('수업 목록 조회 에러:', error);
+      throw error;
+    }
   },
 
   // 수업 이름 목록 조회
@@ -154,5 +207,86 @@ export const courseService = {
       }
     });
     return response.data;
+  },
+
+  // 학생별 수업 목록 조회
+  getStudentCourses: async (studentId: string) => {
+    const token = getToken();
+    if (!token) return { data: [] };
+
+    try {
+      const response = await api.get<StudentCourseResponse>('/classes/enroll', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+        params: {
+          student_idx: studentId  // 학생 ID를 쿼리 파라미터로 전달
+        }
+      });
+      console.log('학생 수업 목록 조회 응답:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('학생 수업 목록 조회 에러:', error);
+      throw error;
+    }
+  },
+
+  // 학생 수업 배정
+  assignStudentCourse: async (data: AssignCourseData) => {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await api.post<AssignCourseResponse>('/classes/enroll', data, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('수업 배정 응답:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('수업 배정 에러:', error);
+      throw error;
+    }
+  },
+
+  // 학생 수업 수정
+  updateStudentCourse: async (data: UpdateStudentCourseData) => {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await api.put(`/classes/student/${data.classes_idx}`, {
+        new_classes_idx: data.new_classes_idx
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('수업 수정 응답:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('수업 수정 에러:', error);
+      throw error;
+    }
+  },
+
+  // 학생 수업 삭제
+  deleteStudentCourse: async (courseId: string) => {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+      const response = await api.delete(`/admin/students/classes/${courseId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      console.log('학생 수업 삭제 응답:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('학생 수업 삭제 에러:', error);
+      throw error;
+    }
   }
 }; 

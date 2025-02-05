@@ -29,8 +29,8 @@ const CourseTypeManager: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const handleRegisterSubmit = async () => {
     try {
       await courseService.registerCourseName({
-        name: courseName,
-        maxStudents
+        cn_name: courseName,
+        cn_max_num: maxStudents
       });
       await queryClient.invalidateQueries({ queryKey: ['courses'] });
       setAlertMessage('수업이 등록되었습니다.');
@@ -45,7 +45,26 @@ const CourseTypeManager: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     }
   };
 
-  // 수업 유형 삭제 핸들러
+  const handleEditSave = async () => {
+    if (!editForm) return;
+
+    try {
+      await courseService.updateCourse(editForm.id, {
+        cn_name: editForm.name,
+        cn_max_num: editForm.maxStudents
+      });
+      await queryClient.invalidateQueries({ queryKey: ['courses'] });
+      setIsEditing(false);
+      setEditForm(null);
+      setAlertMessage('수업이 수정되었습니다.');
+      setShowAlert(true);
+    } catch (error) {
+      console.error(error);
+      setAlertMessage('수정 중 오류가 발생했습니다.');
+      setShowAlert(true);
+    }
+  };
+
   const handleDeleteCourseType = async (courseId: number) => {
     try {
       await courseService.deleteCourse(courseId);
@@ -65,27 +84,6 @@ const CourseTypeManager: React.FC<{ onClose: () => void }> = ({ onClose }) => {
       ...course,
     });
     setIsEditing(true);
-  };
-
-  // 수정 저장
-  const handleEditSave = async () => {
-    if (!editForm) return;
-
-    try {
-      await courseService.updateCourse(editForm.id, {
-        name: editForm.name,
-        maxStudents: editForm.maxStudents
-      });
-      await queryClient.invalidateQueries({ queryKey: ['courses'] });
-      setIsEditing(false);
-      setEditForm(null);
-      setAlertMessage('수업이 수정되었습니다.');
-      setShowAlert(true);
-    } catch (error) {
-      console.error(error);
-      setAlertMessage('수정 중 오류가 발생했습니다.');
-      setShowAlert(true);
-    }
   };
 
   return (

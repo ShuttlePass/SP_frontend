@@ -117,7 +117,7 @@ export const TimeTableDisplay = ({
   };
 
   return (
-    <div>
+    <div className="w-full">
       {isLoading ? (
         <div className="flex h-40 items-center justify-center">로딩 중...</div>
       ) : (

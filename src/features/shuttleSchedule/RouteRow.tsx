@@ -6,6 +6,7 @@ interface RouteRowProps {
   timeSlots: TimeSlot[];
   onTimeSlotClick?: (time: string) => void;
   selectedTime?: string;
+  className?: string;
 }
 
 export const RouteRow = ({
@@ -13,20 +14,27 @@ export const RouteRow = ({
   timeSlots,
   onTimeSlotClick,
   selectedTime,
+  className,
 }: RouteRowProps) => {
   return (
-    <div className="flex items-center gap-4 border-b border-gray-100 py-4">
-      <div className="ml-10 w-20 font-bold">{routeName}</div>
-      <div className="flex flex-1 gap-6">
-        {timeSlots.map((slot) => (
-          <TimeBox
-            key={slot.time}
-            time={slot.time}
-            passengers={slot.passengers ?? []}
-            isSelected={selectedTime === slot.time}
-            onClick={() => onTimeSlotClick?.(slot.time)}
-          />
-        ))}
+    <div className={`p-4 ${className}`}>
+      <div className="mb-2 font-medium">{routeName}</div>
+      <div className="overflow-x-auto">
+        <div className="flex min-w-max gap-2">
+          {timeSlots.map((slot) => (
+            <button
+              key={slot.time}
+              onClick={() => onTimeSlotClick?.(slot.time)}
+              className={`w-24 rounded-lg border p-2 text-center transition-colors ${
+                selectedTime === slot.time
+                  ? "bg-blue-500 text-white"
+                  : "hover:bg-gray-50"
+              }`}
+            >
+              {slot.time}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

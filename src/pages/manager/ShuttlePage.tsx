@@ -7,24 +7,27 @@ export const ShuttlePage = () => {
   const [selectedDate, setSelectedDate] = useState<string>(
     new Date().toISOString().split("T")[0],
   );
-  const [shuttleType, setShuttleType] = useState<"pickup" | "dropoff">(
-    "pickup",
-  );
+  const [shuttleType, setShuttleType] = useState<"pickup" | "dropoff">("pickup");
 
   return (
     <div className="flex">
       <AdminSidebar />
-      <div className="flex flex-auto flex-col">
-        <div className="ml-28 mt-14 flex w-full max-w-[1200px] items-start gap-6">
-          <div className="min-w-[500px] flex-1">
-            <TimeTableDisplay
-              selectedDate={selectedDate}
-              shuttleType={shuttleType}
-              setSelectedDate={setSelectedDate}
-              setShuttleType={setShuttleType}
-            />
+      <div className="flex-1">
+        <div className="p-8">
+          <h1 className="mb-6 text-2xl font-bold">셔틀 관리</h1>
+          <div className="flex gap-6">
+            <div className="flex-1">
+              <TimeTableDisplay
+                selectedDate={selectedDate}
+                shuttleType={shuttleType}
+                setSelectedDate={setSelectedDate}
+                setShuttleType={setShuttleType}
+              />
+            </div>
+            <div className="w-[400px]">
+              <StudentList selectedDate={selectedDate} />
+            </div>
           </div>
-          <StudentList selectedDate={selectedDate} />
         </div>
       </div>
     </div>

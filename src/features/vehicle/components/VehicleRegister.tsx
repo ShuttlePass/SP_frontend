@@ -11,13 +11,19 @@ interface VehicleFormData {
   sh_name: string;
   sh_max_cnt: number | "";
   area_idx: number[];
-  us_idx?: number | null;
+  driver_idx?: number | null;
 }
 
 interface VehicleRegisterProps {
   onSubmit: () => void;
   onClose: () => void;
   drivers: Driver[];
+}
+
+// 기사 상태 타입 정의
+interface DriverStatus {
+  status: 'available' | 'assigned';
+  shuttle_name?: string;  // 배정된 경우 셔틀 이름
 }
 
 const VehicleRegister: React.FC<VehicleRegisterProps> = ({
@@ -29,15 +35,25 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
     sh_name: "",
     sh_max_cnt: "",
     area_idx: [],
-    us_idx: null
+    driver_idx: null
   });
 
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [areas, setAreas] = useState<Area[]>([]);
 
-  // 미배정 기사만 필터링
-  const availableDrivers = drivers.filter(driver => !driver.us_idx);
+  // 기사 목록 필터링 로직 수정
+  const getDriverStatus = (driver: Driver): DriverStatus => {
+    if (driver.sh_idx) {
+      return {
+        status: 'assigned',
+        shuttle_name: driver.us_name
+      };
+    }
+    return {
+      status: 'available'
+    };
+  };
 
   // 지역 목록 가져오기
   useEffect(() => {
@@ -77,7 +93,7 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
       if (formData.area_idx.length === 0) {
         throw new Error("담당 지역을 선택해주세요.");
       }
-      if (!formData.us_idx) {
+      if (!formData.driver_idx) {
         throw new Error("기사를 선택해주세요.");
       }
 
@@ -187,36 +203,47 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
             기사 선택 <span className="text-red-500">*</span>
           </label>
           <div className="mt-2 max-h-60 overflow-y-auto rounded border">
-            {availableDrivers.map((driver) => (
-              <label
-                key={driver.us_idx}
-                className={`flex cursor-pointer items-center space-x-3 border-b p-3 hover:bg-gray-50 ${
-                  formData.us_idx === driver.us_idx ? "bg-blue-50" : ""
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="driver"
-                  checked={formData.us_idx === driver.us_idx}
-                  onChange={() =>
-                    setFormData(prev => ({ ...prev, us_idx: driver.us_idx }))
-                  }
-                  className="h-4 w-4 text-blue-500"
-                />
-                <div>
-                  <div className="font-medium">{driver.us_name}</div>
-                  <div className="text-sm text-gray-500">
-                    ID: {driver.us_id}
+            {drivers.map((driver) => {
+              const driverStatus = getDriverStatus(driver);
+              const isAvailable = driverStatus.status === 'available';
+
+              return (
+                <label
+                  key={driver.us_idx}
+                  className={`flex cursor-pointer items-center space-x-3 border-b p-3 
+                    ${!isAvailable ? 'cursor-not-allowed opacity-50' : 'hover:bg-gray-50'}
+                    ${formData.driver_idx === driver.us_idx ? 'bg-blue-50' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="driver"
+                    checked={formData.driver_idx === driver.us_idx}
+                    onChange={() =>
+                      isAvailable && setFormData(prev => ({ ...prev, driver_idx: driver.us_idx }))
+                    }
+                    disabled={!isAvailable}
+                    className="h-4 w-4 text-blue-500 disabled:cursor-not-allowed"
+                  />
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div className="font-medium">{driver.us_name}</div>
+                      <div className={`text-sm ${isAvailable ? 'text-green-600' : 'text-gray-500'}`}>
+                        {isAvailable ? '배정 가능' : '차량에 배정됨'}
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      ID: {driver.us_id}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      연락처: {driver.us_contact}
+                    </div>
                   </div>
-                  <div className="text-sm text-gray-500">
-                    연락처: {driver.us_contact}
-                  </div>
-                </div>
-              </label>
-            ))}
-            {availableDrivers.length === 0 && (
+                </label>
+              );
+            })}
+            {drivers.length === 0 && (
               <div className="p-4 text-center text-gray-500">
-                배정 가능한 기사가 없습니다
+                등록된 기사가 없습니다
               </div>
             )}
           </div>
@@ -234,7 +261,7 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
           <button
             type="submit"
             className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:bg-blue-300"
-            disabled={isLoading || !formData.sh_name || !formData.sh_max_cnt || formData.area_idx.length === 0 || !formData.us_idx}
+            disabled={isLoading || !formData.sh_name || !formData.sh_max_cnt || formData.area_idx.length === 0 || !formData.driver_idx}
           >
             {isLoading ? "처리 중..." : "등록"}
           </button>

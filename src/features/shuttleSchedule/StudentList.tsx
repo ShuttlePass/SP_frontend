@@ -7,12 +7,23 @@ import {
 } from "./student.types";
 import { ShuttleReservationRequest } from "./api.types";
 
+interface StudentData {
+  student_idx: number;
+  shuttle_idx: number;
+  shuttle_name: string;
+  area_idx: number;
+  area_name: string;
+  max_count: number;
+  state: number;
+}
+
 interface StudentListProps {
   selectedDate: string;
-  selectedShuttleIdx?: number;
-  selectedTimeIdx?: number;
-  onStudentAssign: (reservation: ShuttleReservationRequest) => void;
+  selectedShuttleIdx: number | undefined;
+  selectedTimeIdx: number | undefined;
+  onStudentAssign: (reservation: ShuttleReservationRequest) => Promise<void>;
   selectedShuttleAreas: string[];
+  studentList: StudentData[];
 }
 
 interface Area {
@@ -32,6 +43,7 @@ export const StudentList = ({
   selectedTimeIdx,
   onStudentAssign,
   selectedShuttleAreas,
+  studentList,
 }: StudentListProps) => {
   const [students, setStudents] = useState<StudentWithClasses[]>([]);
   const [areas, setAreas] = useState<Area[]>([]);
@@ -144,7 +156,7 @@ export const StudentList = ({
 
   useEffect(() => {
     fetchStudents(selectedDate, searchName);
-  }, [selectedDate]);
+  }, [selectedDate, searchName, fetchStudents]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,11 +182,20 @@ export const StudentList = ({
     onStudentAssign(reservation);
   };
 
-  // 필터링된 학생 목록을 계산
-  const filteredStudents = students.filter((student) => {
-    const studentArea = getAreaName(student.area_idx);
-    return selectedShuttleAreas.includes(studentArea);
-  });
+  // 필터링된 학생 목록을 studentList와 통합
+  const filteredStudents = students
+    .filter((student) => {
+      const studentArea = getAreaName(student.area_idx);
+      return selectedShuttleAreas.includes(studentArea);
+    })
+    .map(student => {
+      // studentList에서 해당 학생의 추가 정보 찾기
+      const matchingData = studentList.find(item => item.student_idx === student.st_idx);
+      return {
+        ...student,
+        shuttle_info: matchingData
+      };
+    });
 
   return (
     <div className="w-96 rounded-lg bg-white p-4 shadow-md">

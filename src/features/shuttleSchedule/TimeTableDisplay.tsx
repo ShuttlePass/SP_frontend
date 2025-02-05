@@ -1,9 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { TimeTable } from "./TimeTable";
 import PassengerList from "./PassengerList";
 import { StudentList } from "./StudentList";
 import { ShuttleType } from "@/types/shuttle.types";
-import AlertModal from "@/components/common/AlertModal";
 import {
   ShuttleApiResponse,
   ShuttleData,
@@ -11,6 +10,7 @@ import {
 } from "./api.types";
 import { BusRoute } from "./schedule.types";
 import Alert from "@/components/common/Alert";
+import api from "@/api/axios";
 
 interface TimeTableDisplayProps {
   selectedDate: string;
@@ -19,11 +19,39 @@ interface TimeTableDisplayProps {
   setShuttleType: React.Dispatch<React.SetStateAction<"pickup" | "dropoff">>;
 }
 
+// 타입 정의 추가
+interface MatchedArea {
+  area_idx: number;
+  ar_name: string;
+  shuttle_idx: number;
+}
+
 // 셔틀 차량의 담당 지역 정보를 포함하도록 수정
 interface ShuttleArea {
   sh_name: string;
-  ar_name: string;
   area_idx: number;
+  ar_name: string;
+}
+
+// 학생 데이터 타입 정의
+interface StudentData {
+  student_idx: number;
+  shuttle_idx: number;
+  shuttle_name: string;
+  area_idx: number;
+  area_name: string;
+  max_count: number;
+  state: number;
+}
+
+// MatchedItem 타입 정의 추가
+interface MatchedItem {
+  shuttle_idx: number;
+  sh_name: string;
+  area_idx: number;
+  ar_name: string;
+  sh_max_cnt: number;
+  sh_state: number;
 }
 
 export const TimeTableDisplay = ({
@@ -48,6 +76,14 @@ export const TimeTableDisplay = ({
   const [selectedShuttleAreas, setSelectedShuttleAreas] = useState<string[]>(
     [],
   );
+
+  const [areas, setAreas] = useState<ShuttleArea[]>([]);
+  const [filteredAreas, setFilteredAreas] = useState<ShuttleArea[]>([]);
+
+  const [selectedStudentIdx, setSelectedStudentIdx] = useState<number | null>(null);
+
+  // studentsWithCourses 상태의 타입 지정
+  const [studentsWithCourses, setStudentsWithCourses] = useState<StudentData[]>([]);
 
   // API 호출 함수
   const fetchShuttleData = async (date: string, type: number) => {
@@ -94,65 +130,92 @@ export const TimeTableDisplay = ({
     }
   };
 
-  // 선택된 셔틀의 담당 지역 정보를 가져오는 함수
-  const fetchShuttleAreas = async (shuttleIdx: number) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+  // 지역 목록 조회
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const response = await api.get("/list/area", {
+          params: {
+            ip: 0,
+            ar_name: ""
+          }
+        });
+        console.log("Areas response:", response.data);
 
-      // 먼저 모든 지역 정보를 가져옵니다
-      const response = await fetch(
-        `${import.meta.env.VITE_API_SERVER_URL}/list/area?ar_name=`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        console.error("Response status:", response.status);
-        const errorData = await response.json();
-        console.error("Error data:", errorData);
-        setSelectedShuttleAreas([]);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("Areas response:", data);
-
-      if (data.code === 1) {
-        // 선택된 셔틀의 지역만 필터링
-        const selectedShuttle = shuttleData.find(
-          (shuttle) => shuttle.sh_idx === shuttleIdx,
-        );
-        if (selectedShuttle) {
-          // 해당 셔틀이 담당하는 지역 이름들을 설정
-          const shuttleAreas = data.data
-            .filter(
-              (area: { ar_idx: number }) =>
-                // 여기서 셔틀과 지역의 매칭 로직을 구현
-                // 예: 1호차는 영통동, 2호차는 매탄동 등
-                (shuttleIdx === 1 && area.ar_idx === 1) || // 1호차는 영통동
-                (shuttleIdx === 2 && area.ar_idx === 2) || // 2호차는 매탄동
-                (shuttleIdx === 3 && area.ar_idx === 3), // 3호차는 다른 지역
-            )
-            .map((area: { ar_name: string }) => area.ar_name);
-
-          console.log("Filtered areas for shuttle:", shuttleAreas);
-          setSelectedShuttleAreas(shuttleAreas);
+        if (response.data.code === 1) {
+          setAreas(response.data.data || []);
         }
-      } else {
-        setSelectedShuttleAreas([]);
+      } catch (error) {
+        console.error("지역 목록 조회 실패:", error);
+        setAreas([]);
       }
-    } catch (error) {
-      console.error("셔틀 지역 데이터 로딩 실패:", error);
-      setSelectedShuttleAreas([]);
-    }
-  };
+    };
+
+    fetchAreas();
+  }, []); // 빈 배열로 유지 - 컴포넌트 마운트 시 한 번만 실행
+
+  // 셔틀별 지역 필터링
+  useEffect(() => {
+    const fetchShuttleAreas = async () => {
+      if (!selectedShuttleIdx) return;
+
+      try {
+        if (selectedStudentIdx) {
+          // 학생이 선택된 경우 매칭 정보 조회
+          const response = await api.get<{ code: number; data: MatchedArea[] }>('/shuttle/match', {
+            params: {
+              student_idx: selectedStudentIdx
+            }
+          });
+          console.log("Shuttle match response:", response.data);
+
+          if (response.data.code === 1) {
+            // 선택된 셔틀의 지역 정보만 추출
+            const matchedAreas = response.data.data
+              .filter(item => item.shuttle_idx === selectedShuttleIdx)
+              .map(item => ({
+                sh_name: "",
+                area_idx: item.area_idx,
+                ar_name: item.ar_name
+              }));
+
+            if (matchedAreas.length > 0) {
+              console.log("Matched areas:", matchedAreas);
+              setFilteredAreas(matchedAreas);
+              setSelectedShuttleAreas(matchedAreas.map(area => area.ar_name));
+              return;
+            }
+          }
+        }
+
+        // 학생이 선택되지 않았거나 매칭된 지역이 없는 경우 전체 지역 목록 사용
+        const defaultAreas = areas.slice(0, 3).map(area => ({
+          sh_name: "",
+          area_idx: area.area_idx,
+          ar_name: area.ar_name
+        }));
+        console.log("Default areas:", defaultAreas);
+        setFilteredAreas(defaultAreas);
+        setSelectedShuttleAreas(defaultAreas.map(area => area.ar_name));
+
+      } catch (error) {
+        console.error("셔틀 지역 조회 실패:", error);
+        // 에러 시 전체 지역 목록의 처음 3개 지역 사용
+        const defaultAreas = areas.slice(0, 3).map(area => ({
+          sh_name: "",
+          area_idx: area.area_idx,
+          ar_name: area.ar_name
+        }));
+        setFilteredAreas(defaultAreas);
+        setSelectedShuttleAreas(defaultAreas.map(area => area.ar_name));
+      }
+    };
+
+    fetchShuttleAreas();
+  }, [selectedShuttleIdx, selectedStudentIdx, areas]);  // selectedStudentIdx 의존성 추가
 
   // 데이터 변환 함수
-  const convertToRoutes = (shuttleData: ShuttleData[]): BusRoute[] => {
+  const convertToRoutes = useCallback((shuttleData: ShuttleData[]): BusRoute[] => {
     return shuttleData
       .filter((shuttle) => shuttle.sh_state === 1 || shuttle.sh_state === 2)
       .map((shuttle) => ({
@@ -174,7 +237,7 @@ export const TimeTableDisplay = ({
             passengerCount: parseInt(time.cnt) || 0, // cnt 값을 숫자로 변환하여 사용
           })),
       }));
-  };
+  }, [shuttleType]);
 
   // 날짜나 셔틀 타입이 변경될 때마다 데이터 fetch
   useEffect(() => {
@@ -184,18 +247,19 @@ export const TimeTableDisplay = ({
 
   const availableRoutes = useMemo(() => {
     return convertToRoutes(shuttleData);
-  }, [shuttleData, shuttleType]);
+  }, [shuttleData, convertToRoutes]);
 
   const handleTimeSlotClick = (routeId: string, time: string) => {
     setSelectedRoute(routeId);
     setSelectedTime(time);
+    setSelectedStudentIdx(null); // 새로운 시간 선택 시 선택된 학생 초기화
 
     const selectedShuttle = shuttleData.find(
       (shuttle) => shuttle.sh_idx.toString() === routeId,
     );
     if (selectedShuttle) {
       setSelectedShuttleIdx(selectedShuttle.sh_idx);
-      fetchShuttleAreas(selectedShuttle.sh_idx); // 선택된 셔틀의 담당 지역 정보 가져오기
+      setSelectedShuttleAreas(filteredAreas.map(area => area.ar_name));
       const selectedTimeData = selectedShuttle.times.find((t) =>
         t.st_time.startsWith(time),
       );
@@ -263,6 +327,46 @@ export const TimeTableDisplay = ({
     console.log("승객 삭제:", studentIdx);
   };
 
+  // 학생 수업 정보 조회
+  useEffect(() => {
+    const loadStudentCourses = async () => {
+      if (!selectedStudentIdx) {
+        setStudentsWithCourses([]); // 학생이 선택되지 않았을 때 목록 초기화
+        return;
+      }
+
+      try {
+        const formattedDate = new Date(selectedDate).toISOString().split('T')[0];
+
+        const response = await api.get<{ code: number; data: MatchedItem[] }>('/shuttle/match', {
+          params: {
+            student_idx: selectedStudentIdx,
+            date: formattedDate
+          }
+        });
+
+        if (response.data.code === 1) {
+          const studentData = response.data.data.map((item) => ({
+            student_idx: selectedStudentIdx,
+            shuttle_idx: item.shuttle_idx,
+            shuttle_name: item.sh_name,
+            area_idx: item.area_idx,
+            area_name: item.ar_name,
+            max_count: item.sh_max_cnt,
+            state: item.sh_state
+          }));
+
+          setStudentsWithCourses(studentData);
+        }
+      } catch (error) {
+        console.error("학생 매칭 정보 조회 실패:", error);
+        setStudentsWithCourses([]);
+      }
+    };
+
+    loadStudentCourses();
+  }, [selectedStudentIdx, selectedDate]);
+
   return (
     <div className="w-full">
       {isLoading ? (
@@ -293,6 +397,7 @@ export const TimeTableDisplay = ({
               selectedTimeIdx={selectedTimeIdx}
               onStudentAssign={handleStudentAssign}
               selectedShuttleAreas={selectedShuttleAreas}
+              studentList={studentsWithCourses}
             />
           </div>
 

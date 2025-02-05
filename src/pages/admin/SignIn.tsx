@@ -23,6 +23,7 @@ interface LoginResponse {
     token: string;
     company_idx: number;
     us_level: string;
+    us_idx: number;
   };
 }
 
@@ -47,81 +48,43 @@ const SignIn = () => {
 
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginFormValues) => {
-      try {
-        const requestData: LoginRequest = {
-          us_id: credentials.us_id,
-          us_password: credentials.us_password,
-        };
+      const requestData: LoginRequest = {
+        us_id: credentials.us_id,
+        us_password: credentials.us_password,
+      };
 
-        // 요청 데이터 로깅
-        console.log("로그인 요청 데이터:", requestData);
+      const response = await api.post<LoginResponse>("/user/login", requestData);
+      console.log("로그인 응답:", response.data);
 
-        const response = await api.post<LoginResponse>(
-          "/user/login",
-          requestData,
-        );
-
-        // 응답 데이터 로깅
-        console.log("로그인 응답 데이터:", response.data);
-
-        if (response.data.code !== 1) {
-          console.error("로그인 실패 응답:", response.data);
-          throw new Error(response.data.message || "로그인에 실패했습니다.");
-        }
-
-        // 토큰 저장 - response.data.data.token 사용
-        const token = response.data.data.token;
-        if (typeof token === "string") {
-          localStorage.setItem("token", token);
-          console.log("저장된 토큰:", token);
-        } else {
-          console.error("잘못된 토큰 형식:", response.data.data);
-          throw new Error("유효하지 않은 토큰 형식입니다.");
-        }
-
-        return {
-          ...response.data,
-          selectedLevel: credentials.us_level,
-        };
-      } catch (error) {
-        const apiError = error as ApiError;
-        console.error("로그인 에러 상세:", {
-          status: apiError.response?.status,
-          data: apiError.response?.data,
-          message: apiError.message,
-          stack: apiError.stack,
-        });
-        throw error;
+      if (response.data.code !== 1) {
+        throw new Error(response.data.message || "로그인에 실패했습니다.");
       }
+
+      // 토큰과 사용자 정보 저장
+      const { token, us_level, us_idx } = response.data.data;
+      localStorage.setItem('token', token);
+      localStorage.setItem('userLevel', us_level);
+      localStorage.setItem('userIdx', String(us_idx));
+
+      return response.data;
     },
     onSuccess: (data) => {
-      // 성공 데이터 로깅
-      console.log("로그인 성공:", data);
+      const { us_level } = data.data;
 
-      const userLevel = formValues.us_level;
-      console.log("선택된 사용자 레벨:", userLevel);
-
-      switch (userLevel) {
-        case "manager":
-          alert("관리자로 로그인되었습니다.");
-          navigate("/admin/students");
-          break;
-        case "driver":
-          alert("기사로 로그인되었습니다.");
-          navigate("/driver/schedule");
-          break;
-        default:
-          console.error("알 수 없는 사용자 레벨:", userLevel);
-          alert("사용자 권한을 확인할 수 없습니다.");
+      if (us_level === "manager") {
+        alert("관리자로 로그인되었습니다.");
+        navigate("/admin/students");
+      } else if (us_level === "driver") {
+        alert("기사로 로그인되었습니다.");
+        navigate("/driver/schedule");
+      } else {
+        alert("권한이 없는 사용자입니다.");
+        localStorage.clear();
+        navigate("/");
       }
     },
     onError: (error) => {
       const apiError = error as ApiError;
-      console.error("로그인 실패 상세:", {
-        error: error,
-        response: apiError.response?.data,
-        status: apiError.response?.status,
-      });
       const errorMessage =
         apiError.response?.data?.message ||
         "로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.";

@@ -19,24 +19,6 @@ api.interceptors.request.use(
   },
 );
 
-// 토큰을 가져오는 함수
-const getToken = () => {
-  const token = localStorage.getItem("token"); // accessToken에서 token으로 변경
-  if (!token) {
-    window.location.href = "/signin";
-    return null;
-  }
-  return token;
-};
-
-api.interceptors.request.use((config) => {
-  const token = getToken();
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 // 응답 인터셉터 추가
 api.interceptors.response.use(
   (response) => response,

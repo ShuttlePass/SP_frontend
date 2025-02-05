@@ -1,10 +1,11 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useState } from "react";
 import logo from "../../assets/img/logo.png";
 import AuthButton from "../common/AuthButton";
 
 export const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     return localStorage.getItem("isLoggedIn") === "true";
   });
@@ -17,10 +18,13 @@ export const Header = () => {
   };
 
   const getLogoLinkPath = (pathname: string) => {
-    if (pathname.startsWith("/driver")) return "/driver";
+    if (pathname.startsWith("/driver")) return "/driver/schedule";
     if (pathname.startsWith("/admin")) return "/admin";
     return "/";
   };
+
+  // 현재 경로가 /driver로 시작하는지 확인
+  const isDriverPage = location.pathname.startsWith("/driver");
 
   return (
     <header className="w-full bg-white border-b border-gray-200 shadow-sm">
@@ -29,7 +33,7 @@ export const Header = () => {
           <img src={logo} alt="셔틀패스 로고" className="h-10 cursor-pointer" />
         </Link>
         <div className="flex space-x-3">
-          {isLoggedIn ? (
+          {isLoggedIn || isDriverPage ? (
             <>
               <Link to="/account">
                 <AuthButton>내 계정</AuthButton>

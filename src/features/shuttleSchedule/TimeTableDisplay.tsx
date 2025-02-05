@@ -79,6 +79,12 @@ export const TimeTableDisplay = ({
           .filter((time) =>
             shuttleType === "pickup" ? time.st_type === 1 : time.st_type === 2,
           )
+          .sort((a, b) => {
+            // 시간 문자열을 비교하여 오름차순 정렬 (이른 시간이 먼저 오도록)
+            const timeA = a.st_time.substring(0, 5);
+            const timeB = b.st_time.substring(0, 5);
+            return timeA.localeCompare(timeB);
+          })
           .map((time) => ({
             time: time.st_time.substring(0, 5),
             passengers: [], // 필요한 경우 승객 데이터 추가

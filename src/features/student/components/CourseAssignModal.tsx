@@ -3,7 +3,7 @@ import Modal from '../../../components/common/Modal';
 import Button from '../../../components/common/Button';
 import Calendar from 'react-calendar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { mockCourseService } from '../../../mocks/data';
+import { courseService } from '../../../services/courseService';
 import 'react-calendar/dist/Calendar.css';
 import AlertModal from '../../../components/common/AlertModal';
 
@@ -22,9 +22,6 @@ interface CourseAssignModalProps {
   } | null;
 }
 
-const MORNING_TIMES = ['09:00', '10:00', '11:00', '12:00'];
-const AFTERNOON_TIMES = ['13:00', '14:00', '15:00', '16:00', '17:00'];
-
 // styled 컴포넌트 대신 일반 CSS 클래스 사용
 const calendarClassName = `
   w-full border-none font-inherit
@@ -37,6 +34,16 @@ const calendarClassName = `
   [&_.react-calendar__tile--active:enabled:hover]:bg-blue-600
   [&_.react-calendar__tile--active:enabled:focus]:bg-blue-600
 `;
+
+export interface ScheduleTime {
+  classes_idx: number;
+  cn_max_num: number;
+  cl_start_at: string;
+  cl_end_at: string;
+  cn_name: string;
+  cd_days: string;
+  count?: number;
+}
 
 const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
   isOpen,
@@ -54,15 +61,62 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
 
-  // courseTypes 쿼리 결과 확인을 위한 로깅 추가
-  const { data: courseTypes, isLoading, error } = useQuery({
+  // 수업 목록 조회
+  const { data: courseTypes, isLoading: isLoadingCourses } = useQuery({
     queryKey: ['courseTypes'],
     queryFn: async () => {
-      const types = await mockCourseService.getCourseTypes();
-      console.log('Fetched course types:', types);  // 데이터 확인
-      return types;
+      const response = await courseService.getCourseNames();
+      return response;
     }
   });
+
+  // 수업 시간표 조회
+  const { data: schedules = [], isLoading: isLoadingSchedules } = useQuery({
+    queryKey: ['courseSchedules', selectedCourseType],
+    queryFn: async () => {
+      if (!selectedCourseType) return [];
+      const response = await courseService.getCourseSchedules();
+      return response?.data?.filter(schedule => schedule.cn_name === selectedCourseType) || [];
+    },
+    enabled: !!selectedCourseType
+  });
+
+  // 시간대 목록 생성
+  const availableTimes = schedules?.map(schedule => {
+    if (!schedule.cl_start_at || !schedule.cl_end_at) return null;
+
+    try {
+      // 시간 형식 변환 (HH:MM:SS -> HH:MM)
+      const startTime = schedule.cl_start_at.substring(0, 5);
+      const endTime = schedule.cl_end_at.substring(0, 5);
+      
+      // 요일 변환
+      const days = schedule.cd_days.split(',').map(day => {
+        switch(day.trim()) {
+          case 'MON': return '월';
+          case 'TUE': return '화';
+          case 'WED': return '수';
+          case 'THU': return '목';
+          case 'FRI': return '금';
+          case 'SAT': return '토';
+          case 'SUN': return '일';
+          default: return day;
+        }
+      });
+
+      return {
+        classes_idx: schedule.classes_idx,
+        startTime,
+        endTime,
+        maxStudents: schedule.cn_max_num,
+        currentCount: schedule.count || 0,
+        days
+      };
+    } catch (error) {
+      console.error('시간 데이터 처리 중 에러:', error);
+      return null;
+    }
+  }).filter(Boolean) || [];
 
   const queryClient = useQueryClient();
 
@@ -92,30 +146,85 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
     try {
       if (!selectedDate || selectedTimes.length === 0 || !selectedCourseType) return;
 
+      // 선택된 수업 시간표 찾기
+      const selectedSchedule = schedules?.find(schedule => {
+        const scheduleTime = schedule.cl_start_at.substring(0, 5);
+        return scheduleTime === selectedTimes[0];
+      });
+
+      if (!selectedSchedule) {
+        setAlertMessage('선택한 시간의 수업 시간표를 찾을 수 없습니다.');
+        setShowAlert(true);
+        return;
+      }
+
       if (courseToEdit) {
-        await mockCourseService.updateCourse({
-          id: courseToEdit.id,
-          type: selectedCourseType,
-          date: selectedDate.toISOString().split('T')[0],
-          startTime: selectedTimes[0]
+        await courseService.updateStudentCourse({
+          classes_idx: Number(courseToEdit.id),
+          new_classes_idx: selectedSchedule.classes_idx
         });
         setAlertMessage('수업이 수정되었습니다.');
       } else {
-        await Promise.all(
-          selectedTimes.map(time => 
-            mockCourseService.assignCourse({
-              studentId,
-              type: selectedCourseType,
-              date: selectedDate.toISOString().split('T')[0],
-              startTime: time
-            })
-          )
-        );
-        setAlertMessage('수업이 배정되었습니다.');
-      }
+        // 요일 인덱스 찾기
+        const dayMap: { [key: string]: number } = {
+          'MON': 1,
+          'TUE': 2,
+          'WED': 3,
+          'THU': 4,
+          'FRI': 5,
+          'SAT': 6,
+          'SUN': 7
+        };
 
-      await queryClient.invalidateQueries({ queryKey: ['assignedCourses', studentId] });
-      setShowAlert(true);
+        // 선택된 날짜의 요일 찾기
+        const days = selectedSchedule.cd_days.split(',');
+        const selectedDay = selectedDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+        const dayIdx = dayMap[selectedDay];
+
+        if (!days.includes(selectedDay)) {
+          setAlertMessage('선택한 날짜는 해당 수업의 요일이 아닙니다.');
+          setShowAlert(true);
+          return;
+        }
+
+        try {
+          // 날짜를 YYYY-MM-DD 형식으로 변환
+          const year = selectedDate.getFullYear();
+          const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+          const day = String(selectedDate.getDate()).padStart(2, '0');
+          const formattedDate = `${year}-${month}-${day}`;
+
+          const response = await courseService.assignStudentCourse({
+            student_idx: Number(studentId),
+            classes_day_idx: dayIdx,
+            ce_date: formattedDate
+          });
+
+          if (!response) {
+            setAlertMessage('수업 배정 중 오류가 발생했습니다.');
+            setShowAlert(true);
+            return;
+          }
+
+          // 응답 코드에 따른 처리
+          if (response.code === 1) {
+            setAlertMessage('수업이 배정되었습니다.');
+            await queryClient.invalidateQueries({ queryKey: ['assignedCourses', studentId] });
+            setShowAlert(true);
+            onClose();
+          } else if (response.code === -104) {
+            setAlertMessage('이미 등록된 수업과 시간이 겹칩니다.');
+            setShowAlert(true);
+          } else {
+            setAlertMessage('수업 배정 중 오류가 발생했습니다.');
+            setShowAlert(true);
+          }
+        } catch (error) {
+          console.error('수업 배정 실패:', error);
+          setAlertMessage('수업 배정 중 오류가 발생했습니다.');
+          setShowAlert(true);
+        }
+      }
     } catch (error) {
       console.error('수업 배정/수정 실패:', error);
       setAlertMessage('오류가 발생했습니다.');
@@ -132,10 +241,8 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
           {/* 수업 선택 */}
           <div>
             <h3 className="text-lg font-medium mb-3">수업 선택</h3>
-            {isLoading ? (
+            {isLoadingCourses ? (
               <div>로딩 중...</div>
-            ) : error ? (
-              <div>수업 목록을 불러오는데 실패했습니다.</div>
             ) : (
               <select
                 value={selectedCourseType}
@@ -144,10 +251,10 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
                 disabled={!!courseToEdit}
                 aria-label="수업 선택"
               >
-                <option value="">수업을 선택하세요</option>
+                <option value="" key="default">수업을 선택하세요</option>
                 {courseTypes?.map((course) => (
-                  <option key={course.id} value={course.name}>
-                    {course.name} (최대 {course.maxStudents}명)
+                  <option key={course.cn_idx} value={course.cn_name}>
+                    {course.cn_name} (최대 {course.cn_max_num}명)
                   </option>
                 ))}
               </select>
@@ -167,48 +274,50 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
             />
           </div>
 
-          {/* 시간 선택 */}
-          {selectedDate && (
+          {/* 시간표 선택 */}
+          {selectedCourseType && (
             <div>
               <h3 className="text-lg font-medium mb-3">시간 선택</h3>
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-medium text-gray-600 mb-2">오전</h4>
-                  <div className="grid grid-cols-4 gap-2">
-                    {MORNING_TIMES.map(time => (
-                      <button
-                        key={time}
-                        onClick={() => handleTimeSelect(time)}
-                        className={`p-1.5 text-sm rounded-lg ${
-                          selectedTimes.includes(time)
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 hover:bg-gray-200'
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    ))}
-                  </div>
+              {isLoadingSchedules ? (
+                <div>시간표 로딩 중...</div>
+              ) : availableTimes.length > 0 ? (
+                <div className="space-y-2">
+                  {availableTimes.map((schedule) => schedule && (
+                    <button
+                      key={schedule.classes_idx}
+                      onClick={() => handleTimeSelect(schedule.startTime)}
+                      disabled={schedule.currentCount >= schedule.maxStudents}
+                      className={`w-full p-3 rounded-lg border transition-colors ${
+                        selectedTimes.includes(schedule.startTime)
+                          ? 'bg-blue-500 text-white border-blue-500'
+                          : schedule.currentCount >= schedule.maxStudents
+                          ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                          : 'bg-white hover:bg-gray-50 border-gray-200'
+                      }`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span>
+                          {schedule.startTime} - {schedule.endTime}
+                          <span className="ml-2 text-sm">
+                            ({schedule.days.join(', ')})
+                          </span>
+                        </span>
+                        <span className={`text-sm ${
+                          schedule.currentCount >= schedule.maxStudents
+                            ? 'text-red-500'
+                            : 'text-gray-500'
+                        }`}>
+                          {schedule.currentCount}/{schedule.maxStudents}명
+                        </span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <h4 className="text-sm font-medium text-gray-600 mb-2">오후</h4>
-                  <div className="grid grid-cols-4 gap-2">
-                    {AFTERNOON_TIMES.map(time => (
-                      <button
-                        key={time}
-                        onClick={() => handleTimeSelect(time)}
-                        className={`p-1.5 text-sm rounded-lg ${
-                          selectedTimes.includes(time)
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-gray-100 hover:bg-gray-200'
-                        }`}
-                      >
-                        {time}
-                      </button>
-                    ))}
-                  </div>
+              ) : (
+                <div className="text-gray-500 text-center py-4">
+                  등록된 시간표가 없습니다.
                 </div>
-              </div>
+              )}
             </div>
           )}
 

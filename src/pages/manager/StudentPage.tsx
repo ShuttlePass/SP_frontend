@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AdminSidebar from "@/features/manager/AdminSidebar";
 import Button from "../../components/common/Button";
 import { studentService } from "../../services/studentService";
-import { mockCourseService } from "../../mocks/data";
 import Modal from "../../components/common/Modal";
 import AlertModal from "../../components/common/AlertModal";
 import ConfirmModal from "../../components/common/ConfirmModal";
@@ -13,6 +12,7 @@ import StudentDetailModal from "../../features/student/components/StudentDetailM
 import CourseManager from "../../features/course/components/CourseManager";
 import CourseAssignModal from "../../features/student/components/CourseAssignModal";
 import { Student } from "../../types/student";
+import { courseService } from "../../services/courseService";
 
 // interface StudentRegisterData {
 //   area_idx: number;
@@ -26,10 +26,6 @@ interface AssignedCourse {
   type: string;
   date: string;
   startTime: string;
-}
-
-interface ApiError {
-  message: string;
 }
 
 const StudentPage = () => {
@@ -61,11 +57,35 @@ const StudentPage = () => {
   // 학생별 수업 목록 조회 수정
   const { data: assignedCourses } = useQuery<AssignedCourse[]>({
     queryKey: ["assignedCourses", selectedStudent?.id],
-    queryFn: () => {
-      if (!selectedStudent?.id) return []; // selectedStudent가 null일 때 빈 배열 반환
-      return mockCourseService.getStudentCourses(selectedStudent.id);
+    queryFn: async () => {
+      if (!selectedStudent?.id) return [];
+      try {
+        const response = await courseService.getStudentCourses(selectedStudent.id);
+        if (!response?.data) {
+          console.warn('수업 목록 데이터가 없습니다');
+          return [];
+        }
+
+        // 선택된 학생의 수업만 필터링
+        const studentCourses = response.data.filter(
+          course => course.student_idx === Number(selectedStudent.id)
+        );
+
+        // 수업 정보 매핑
+        return studentCourses.map(course => ({
+          id: course.ce_idx.toString(),        // 수업 배정 ID
+          type: course.cn_name,                // 수업 이름
+          date: course.ce_date,                // 수업 날짜
+          startTime: course.cl_start_at.substring(0, 5)  // HH:MM 형식
+        }));
+
+      } catch (error) {
+        console.error('학생 수업 목록 조회 에러:', error);
+        return [];
+      }
     },
-    enabled: !!selectedStudent?.id, // selectedStudent와 id가 있을 때만 쿼리 실행
+    enabled: !!selectedStudent?.id,
+    retry: false
   });
 
   // 검색어에 따른 필터링
@@ -172,7 +192,7 @@ const StudentPage = () => {
       message: `${course.type} 수업을 삭제하시겠습니까?`,
       onConfirm: async () => {
         try {
-          await mockCourseService.deleteCourse(course.id);
+          await courseService.deleteStudentCourse(course.id);
           await queryClient.invalidateQueries({
             queryKey: ["assignedCourses", selectedStudent?.id],
           });
@@ -180,11 +200,8 @@ const StudentPage = () => {
           setAlertMessage("수업이 삭제되었습니다.");
           setShowAlert(true);
         } catch (error) {
-          const apiError = error as ApiError;
           console.error("수업 삭제 실패:", error);
-          setAlertMessage(
-            apiError.message || "수업 삭제 중 오류가 발생했습니다.",
-          );
+          setAlertMessage("수업 삭제 중 오류가 발생했습니다.");
           setShowAlert(true);
         }
       },

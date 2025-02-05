@@ -50,8 +50,8 @@ const StudentPage = () => {
 
   // 학생 목록 조회
   const { data: students = [] } = useQuery({
-    queryKey: ['students'],
-    queryFn: studentService.getStudents
+    queryKey: ["students"],
+    queryFn: studentService.getStudents,
   });
 
   // 학생별 수업 목록 조회 수정
@@ -60,32 +60,33 @@ const StudentPage = () => {
     queryFn: async () => {
       if (!selectedStudent?.id) return [];
       try {
-        const response = await courseService.getStudentCourses(selectedStudent.id);
+        const response = await courseService.getStudentCourses(
+          selectedStudent.id,
+        );
         if (!response?.data) {
-          console.warn('수업 목록 데이터가 없습니다');
+          console.warn("수업 목록 데이터가 없습니다");
           return [];
         }
 
         // 선택된 학생의 수업만 필터링
         const studentCourses = response.data.filter(
-          course => course.student_idx === Number(selectedStudent.id)
+          (course) => course.student_idx === Number(selectedStudent.id),
         );
 
-        // 수업 정보 매핑
-        return studentCourses.map(course => ({
-          id: course.ce_idx.toString(),        // 수업 배정 ID
-          type: course.cn_name,                // 수업 이름
-          date: course.ce_date,                // 수업 날짜
-          startTime: course.cl_start_at.substring(0, 5)  // HH:MM 형식
+        // 수업 정보 매핑 시 날짜 데이터 검증
+        return studentCourses.map((course) => ({
+          id: course.ce_idx.toString(),
+          type: course.cn_name,
+          date: course.ce_date || "", // 날짜가 없는 경우 빈 문자열 처리
+          startTime: course.cl_start_at?.substring(0, 5) || "", // 시간이 없는 경우 빈 문자열 처리
         }));
-
       } catch (error) {
-        console.error('학생 수업 목록 조회 에러:', error);
+        console.error("학생 수업 목록 조회 에러:", error);
         return [];
       }
     },
     enabled: !!selectedStudent?.id,
-    retry: false
+    retry: false,
   });
 
   // 검색어에 따른 필터링
@@ -95,10 +96,19 @@ const StudentPage = () => {
       student.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
-  // 날짜 포맷 함수 추가
+  // 날짜 포맷 함수 수정
   const formatDateToKorean = (date: string) => {
-    const [year, month, day] = date.split("-").map(Number);
-    return `${year}. ${month}. ${day}`;
+    if (!date) return "-";
+
+    try {
+      const [year, month, day] = date.split("-");
+      if (!year || !month || !day) return "-";
+
+      return `${year}. ${parseInt(month)}. ${parseInt(day)}`;
+    } catch (error) {
+      console.error("날짜 형식 변환 오류:", error);
+      return "-";
+    }
   };
 
   // 검색어 입력 핸들러
@@ -139,44 +149,44 @@ const StudentPage = () => {
 
   const handleStudentUpdate = async (updatedStudent: Student) => {
     try {
-      console.log('수정할 학생 데이터:', updatedStudent); // 수정 데이터 로깅
+      console.log("수정할 학생 데이터:", updatedStudent); // 수정 데이터 로깅
 
       await studentService.updateStudent(updatedStudent.id, {
         st_name: updatedStudent.name,
         st_contact: updatedStudent.phone,
         st_address: updatedStudent.address,
-        area_idx: updatedStudent.area_idx
+        area_idx: updatedStudent.area_idx,
       });
 
       // 학생 목록 캐시 무효화 및 재조회
-      await queryClient.invalidateQueries({ queryKey: ['students'] });
-      
+      await queryClient.invalidateQueries({ queryKey: ["students"] });
+
       setShowDetailModal(false);
       setSelectedStudent(null);
     } catch (error) {
-      console.error('학생 정보 수정 실패:', error);
-      alert('학생 정보 수정에 실패했습니다.');
+      console.error("학생 정보 수정 실패:", error);
+      alert("학생 정보 수정에 실패했습니다.");
     }
   };
 
   const handleStudentRegister = async (newStudent: Student) => {
     try {
-      console.log('등록할 학생 데이터:', newStudent); // 등록 데이터 로깅
+      console.log("등록할 학생 데이터:", newStudent); // 등록 데이터 로깅
 
       await studentService.registerStudent({
         st_name: newStudent.name,
         st_contact: newStudent.phone,
         st_address: newStudent.address,
-        area_idx: newStudent.area_idx
+        area_idx: newStudent.area_idx,
       });
 
       // 학생 목록 캐시 무효화 및 재조회
-      await queryClient.invalidateQueries({ queryKey: ['students'] });
-      
+      await queryClient.invalidateQueries({ queryKey: ["students"] });
+
       setShowRegisterModal(false);
     } catch (error) {
-      console.error('학생 등록 실패:', error);
-      alert('학생 등록에 실패했습니다.');
+      console.error("학생 등록 실패:", error);
+      alert("학생 등록에 실패했습니다.");
     }
   };
 

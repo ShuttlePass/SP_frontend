@@ -5,6 +5,12 @@ import VehicleRegister from "../../features/vehicle/components/VehicleRegister";
 import DriverAssign from "../../features/vehicle/components/DriverAssign";
 import { Vehicle } from "../../types/vehicle";
 import api from "@/api/axios";
+import { AxiosError } from "axios";
+
+interface ApiErrorResponse {
+  message: string;
+  status: number;
+}
 
 const VehiclePage: React.FC = () => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -21,7 +27,7 @@ const VehiclePage: React.FC = () => {
     setIsLoading(true);
     setError("");
     try {
-      const token = localStorage.getItem("token"); // accessToken에서 token으로 변경
+      const token = localStorage.getItem("token");
 
       if (!token) {
         window.location.href = "/signin";
@@ -30,13 +36,14 @@ const VehiclePage: React.FC = () => {
 
       const response = await api.get("/shuttle/car");
       setVehicles(response.data.data);
-    } catch (error: any) {
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
       const errorMessage =
-        error.response?.data?.message || "차량 목록을 불러오는데 실패했습니다.";
+        axiosError.response?.data?.message || "차량 목록을 불러오는데 실패했습니다.";
       setError(errorMessage);
       console.error("차량 목록을 불러오는데 실패했습니다:", error);
 
-      if (error.response?.status === 401) {
+      if (axiosError.response?.status === 401) {
         localStorage.removeItem("token");
         window.location.href = "/signin";
       }
@@ -46,7 +53,6 @@ const VehiclePage: React.FC = () => {
   };
 
   const handleVehicleSelect = (vehicle: Vehicle) => {
-    // 기사 배정 여부와 관계없이 차량 선택 가능하도록 수정
     setSelectedVehicle(vehicle);
   };
 
@@ -55,8 +61,8 @@ const VehiclePage: React.FC = () => {
     setSelectedVehicle(null);
   };
 
-  const handleSubmit = async (data: any) => {
-    await fetchVehicles(); // 목록 새로고침
+  const handleSubmit = async () => {
+    await fetchVehicles();
   };
 
   if (isLoading) {

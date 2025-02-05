@@ -36,13 +36,13 @@ export const TimeTable: React.FC<TimeTableProps> = ({
 
   return (
     <div className="flex">
-      <div className="w-full max-w-4xl rounded-lg bg-white shadow-md">
+      <div className="w-full rounded-lg bg-white shadow-md">
         <div className="rounded-t-lg border border-gray-300 bg-gray-100 p-4">
           <div className="flex items-center justify-between">
             <div className="flex gap-2">
               <select
                 title="등/하원"
-                className="rounded-md border border-gray-300 px-3 py-2"
+                className="w-24 rounded-md border border-gray-300 px-3 py-2 text-center"
                 value={shuttleType}
                 onChange={(e) =>
                   onScheduleTypeChange(e.target.value as "pickup" | "dropoff")
@@ -58,23 +58,25 @@ export const TimeTable: React.FC<TimeTableProps> = ({
             />
           </div>
         </div>
-        <div className="h-96 overflow-y-auto rounded-b-lg bg-white shadow-sm">
+        <div className="max-h-[600px] overflow-y-auto rounded-b-lg bg-white p-2 shadow-sm">
           {routes.length > 0 ? (
             routes.map((route) => (
-              <RouteRow
-                key={route.id}
-                routeName={route.carName}
-                timeSlots={route.timeSlots}
-                onTimeSlotClick={(time) => onTimeSlotClick?.(route.id, time)}
-                selectedTime={
-                  selectedRoute === route.id ? selectedTime : undefined
-                }
-              />
+              <div key={route.id} className="mb-2">
+                <RouteRow
+                  routeName={route.carName}
+                  timeSlots={route.timeSlots}
+                  onTimeSlotClick={(time) => onTimeSlotClick?.(route.id, time)}
+                  selectedTime={
+                    selectedRoute === route.id ? selectedTime : undefined
+                  }
+                  className="overflow-x-auto"
+                />
+              </div>
             ))
           ) : (
             <div className="flex h-full flex-col items-center justify-center text-center text-gray-500">
-              선택한 날짜에 등록된 셔틀이 없습니다.
-              <Button variant="primary" size="sm" className="mt-10">
+              <span className="mb-4">선택한 날짜에 등록된 셔틀이 없습니다.</span>
+              <Button variant="primary" size="sm">
                 <Link to="/admin/vehicles">바로가기</Link>
               </Button>
             </div>

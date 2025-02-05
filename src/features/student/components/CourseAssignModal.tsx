@@ -171,6 +171,16 @@ const CourseAssignModal: React.FC<CourseAssignModalProps> = ({
         return;
       }
 
+      // 선택한 날짜의 요일이 수업 요일과 일치하는지 확인
+      const selectedDayName = selectedDate.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase();
+      const availableDays = selectedSchedule.cd_days.split(',').map(day => day.trim());
+      
+      if (!availableDays.includes(selectedDayName)) {
+        setAlertMessage(`이 수업은 ${availableDays.join(', ')} 요일에만 가능합니다.`);
+        setShowAlert(true);
+        return;
+      }
+
       if (courseToEdit) {
         await courseService.updateStudentCourse({
           classes_idx: Number(courseToEdit.id),

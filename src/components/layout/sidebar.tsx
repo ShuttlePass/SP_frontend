@@ -8,41 +8,42 @@ const Sidebar = () => {
     location.pathname === path || location.pathname.includes(path);
 
   return (
-    <aside className="w-[300px] min-h-screen bg-white border-r">
-      <div className="p-4">
-        <Link to="/admin">
-          <img src={logo} alt="셔틀패스" className="h-12 mx-auto" />
-        </Link>
-      </div>
-      <nav className="mt-8">
-        <ul className="space-y-3">
-          {MENU_ITEMS.map((item) => (
-            <li key={item.path}>
-              <Link
-                to={item.path}
-                className={`block text-center py-2 font-semibold ${
-                  isActiveMenu(item.path)
-                    ? "text-blue-500 font-bold"
-                    : "text-gray-700 hover:text-blue-500"
-                }`}
-              >
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
-      <div className="absolute bottom-0 w-[300px] p-4 border-t">
-        <div className="flex justify-center gap-2">
-          <button className="px-3 py-1.5 text-sm font-medium bg-white border-2 border-gray-300 rounded hover:bg-gray-50">
-            로그아웃
-          </button>
-          <button className="px-3 py-1.5 text-sm font-medium bg-white border-2 border-gray-300 rounded hover:bg-gray-50">
-            내 계정
-          </button>
+    <div className="fixed h-screen w-64 bg-white shadow-md">
+      <div className="flex h-full flex-col">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-4">
+            <img src={logo} alt="로고" className="mb-8 h-8" />
+          </div>
+          <nav>
+            {MENU_ITEMS.map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`block py-2 text-center font-semibold ${
+                    isActiveMenu(item.path)
+                      ? "font-bold text-blue-500"
+                      : "text-gray-700 hover:text-blue-500"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </nav>
+        </div>
+        
+        <div className="border-t p-4">
+          <div className="flex gap-2">
+            <button className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50">
+              로그아웃
+            </button>
+            <button className="flex-1 rounded-md border border-gray-300 px-4 py-2 text-sm hover:bg-gray-50">
+              내 계정
+            </button>
+          </div>
         </div>
       </div>
-    </aside>
+    </div>
   );
 };
 

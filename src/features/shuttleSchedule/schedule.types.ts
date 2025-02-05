@@ -17,5 +17,6 @@ export interface BusRoute {
 
 export interface TimeSlot {
   time: string;
-  passengers?: Passenger[];
+  passengers: Passenger[];
+  passengerCount: number;
 }

@@ -1,57 +1,26 @@
-import React, { useState, useEffect } from "react";
-import { Vehicle } from "../../../types/vehicle";
+import React, { useState } from "react";
+import { Vehicle, Driver } from "@/types/vehicle";
 import api from "@/api/axios";
 
 interface DriverAssignProps {
   vehicle: Vehicle;
-  onSubmit: (data: any) => void;
+  drivers: Driver[];
+  onSubmit: () => void;
   onClose: () => void;
-}
-
-interface Driver {
-  us_idx: number;
-  us_id: string;
-  us_level: string;
-  company_idx: number;
-  us_contact: string;
-  us_name: string;
-  sh_idx: number | null;
 }
 
 const DriverAssign: React.FC<DriverAssignProps> = ({
   vehicle,
+  drivers,
   onSubmit,
   onClose,
 }) => {
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const [drivers, setDrivers] = useState<Driver[]>([]);
   const [selectedDriver, setSelectedDriver] = useState<Driver | null>(null);
 
-  // 기사 목록 가져오기
-  useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        const response = await api.get("/user", {
-          params: {
-            us_level: "driver",
-          },
-        });
-
-        if (response.data.code === 1) {
-          const availableDrivers = response.data.data.filter(
-            (driver: Driver) => driver.sh_idx === null,
-          );
-          setDrivers(availableDrivers);
-        }
-      } catch (err) {
-        console.error("기사 목록 조회 실패:", err);
-        setError("기사 목록을 불러오는데 실패했습니다.");
-      }
-    };
-
-    fetchDrivers();
-  }, []);
+  // 미배정 기사만 필터링
+  const availableDrivers = drivers.filter(driver => !driver.sh_idx);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,18 +37,14 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
 
       const response = await api.put("/shuttle/driver", driverAssignData);
       if (response.data.code === 1) {
-        onSubmit(response.data);
+        onSubmit();
         onClose();
       } else {
         throw new Error(response.data.message || "기사 배정에 실패했습니다.");
       }
-    } catch (err: any) {
-      console.error("API Error Details:", err);
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "기사 배정에 실패했습니다. 네트워크 연결을 확인해주세요.",
-      );
+    } catch (err: Error | unknown) {
+      const errorMessage = err instanceof Error ? err.message : "알 수 없는 에러가 발생했습니다.";
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -112,10 +77,10 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
 
         {/* 기사 목록 */}
         <div>
-          <h3 className="mb-2 font-medium">기사 정보</h3>
+          <h3 className="mb-2 font-medium">기사 선택</h3>
           <div className="h-[calc(100vh-24rem)] overflow-y-auto rounded border">
             <div className="space-y-2 p-2">
-              {drivers.map((driver) => (
+              {availableDrivers.map((driver) => (
                 <div
                   key={driver.us_idx}
                   className={`cursor-pointer rounded p-3 hover:bg-gray-50 ${
@@ -134,7 +99,7 @@ const DriverAssign: React.FC<DriverAssignProps> = ({
                   </div>
                 </div>
               ))}
-              {drivers.length === 0 && (
+              {availableDrivers.length === 0 && (
                 <div className="p-4 text-center text-gray-500">
                   배정 가능한 기사가 없습니다
                 </div>

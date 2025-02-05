@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "@/api/axios";
+import { Driver } from "@/types/vehicle";
 
 interface Area {
   ar_idx: number;
@@ -10,26 +11,33 @@ interface VehicleFormData {
   sh_name: string;
   sh_max_cnt: number | "";
   area_idx: number[];
+  us_idx?: number | null;
 }
 
 interface VehicleRegisterProps {
-  onSubmit: (data: any) => void;
+  onSubmit: () => void;
   onClose: () => void;
+  drivers: Driver[];
 }
 
 const VehicleRegister: React.FC<VehicleRegisterProps> = ({
   onSubmit,
   onClose,
+  drivers
 }) => {
   const [formData, setFormData] = useState<VehicleFormData>({
     sh_name: "",
     sh_max_cnt: "",
     area_idx: [],
+    us_idx: null
   });
 
   const [error, setError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [areas, setAreas] = useState<Area[]>([]);
+
+  // 미배정 기사만 필터링
+  const availableDrivers = drivers.filter(driver => !driver.us_idx);
 
   // 지역 목록 가져오기
   useEffect(() => {
@@ -44,13 +52,10 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
             response.data.message || "지역 목록을 불러오는데 실패했습니다.",
           );
         }
-      } catch (err: any) {
+      } catch (err: Error | unknown) {
+        const errorMessage = err instanceof Error ? err.message : "알 수 없는 에러가 발생했습니다.";
+        setError(errorMessage);
         console.error("지역 목록 조회 실패:", err);
-        setError(
-          err.response?.data?.message ||
-            err.message ||
-            "지역 목록을 불러오는데 실패했습니다.",
-        );
       }
     };
 
@@ -72,21 +77,21 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
       if (formData.area_idx.length === 0) {
         throw new Error("담당 지역을 선택해주세요.");
       }
+      if (!formData.us_idx) {
+        throw new Error("기사를 선택해주세요.");
+      }
 
       const response = await api.post("/shuttle", formData);
 
       if (response.data.code === 1) {
-        onSubmit(response.data);
+        onSubmit();
         onClose();
       } else {
         throw new Error(response.data.message || "차량 등록에 실패했습니다.");
       }
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          err.message ||
-          "차량 등록에 실패했습니다.",
-      );
+    } catch (err: Error | unknown) {
+      const errorMessage = err instanceof Error ? err.message : "알 수 없는 에러가 발생했습니다.";
+      setError(errorMessage);
       console.error("차량 등록 에러:", err);
     } finally {
       setIsLoading(false);
@@ -176,6 +181,47 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
           </div>
         </div>
 
+        {/* 기사 선택 */}
+        <div>
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            기사 선택 <span className="text-red-500">*</span>
+          </label>
+          <div className="mt-2 max-h-60 overflow-y-auto rounded border">
+            {availableDrivers.map((driver) => (
+              <label
+                key={driver.us_idx}
+                className={`flex cursor-pointer items-center space-x-3 border-b p-3 hover:bg-gray-50 ${
+                  formData.us_idx === driver.us_idx ? "bg-blue-50" : ""
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="driver"
+                  checked={formData.us_idx === driver.us_idx}
+                  onChange={() =>
+                    setFormData(prev => ({ ...prev, us_idx: driver.us_idx }))
+                  }
+                  className="h-4 w-4 text-blue-500"
+                />
+                <div>
+                  <div className="font-medium">{driver.us_name}</div>
+                  <div className="text-sm text-gray-500">
+                    ID: {driver.us_id}
+                  </div>
+                  <div className="text-sm text-gray-500">
+                    연락처: {driver.us_contact}
+                  </div>
+                </div>
+              </label>
+            ))}
+            {availableDrivers.length === 0 && (
+              <div className="p-4 text-center text-gray-500">
+                배정 가능한 기사가 없습니다
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="mt-6 flex justify-end space-x-2">
           <button
             type="button"
@@ -188,7 +234,7 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
           <button
             type="submit"
             className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:bg-blue-300"
-            disabled={isLoading}
+            disabled={isLoading || !formData.sh_name || !formData.sh_max_cnt || formData.area_idx.length === 0 || !formData.us_idx}
           >
             {isLoading ? "처리 중..." : "등록"}
           </button>

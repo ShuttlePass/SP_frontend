@@ -44,14 +44,15 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
 
   // 기사 목록 필터링 로직 수정
   const getDriverStatus = (driver: Driver): DriverStatus => {
-    if (driver.sh_idx) {
+    // sh_idx가 null이거나 undefined인 경우 배정 안됨
+    if (!driver.sh_idx) {
       return {
-        status: 'assigned',
-        shuttle_name: driver.us_name
+        status: 'available'
       };
     }
     return {
-      status: 'available'
+      status: 'assigned',
+      shuttle_name: driver.us_name
     };
   };
 
@@ -227,8 +228,8 @@ const VehicleRegister: React.FC<VehicleRegisterProps> = ({
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div className="font-medium">{driver.us_name}</div>
-                      <div className={`text-sm ${isAvailable ? 'text-green-600' : 'text-gray-500'}`}>
-                        {isAvailable ? '배정 가능' : '차량에 배정됨'}
+                      <div className={`text-sm ${isAvailable ? 'text-green-600' : 'text-red-500'}`}>
+                        {isAvailable ? '배정 가능' : '배정됨'}
                       </div>
                     </div>
                     <div className="text-sm text-gray-500">

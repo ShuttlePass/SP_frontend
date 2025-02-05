@@ -12,6 +12,7 @@ export interface Student {
   st_name: string;
   st_contact: string;
   st_address: string;
+  st_region: string;
   st_address_x: number | null;
   st_address_y: number | null;
   created_at: string;

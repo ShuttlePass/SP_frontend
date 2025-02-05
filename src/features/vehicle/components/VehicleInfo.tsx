@@ -1,69 +1,76 @@
 import React from "react";
-import { Vehicle } from "../../../types/vehicle";
+import { Vehicle } from "@/types/vehicle";
 
 interface VehicleInfoProps {
   vehicles: Vehicle[];
   onVehicleSelect: (vehicle: Vehicle) => void;
   onRegisterClick: () => void;
+  onDriverListClick: () => void;
 }
 
 const VehicleInfo: React.FC<VehicleInfoProps> = ({
   vehicles,
   onVehicleSelect,
   onRegisterClick,
+  onDriverListClick,
 }) => {
-  const getStatusText = (vehicle: Vehicle) => {
-    return vehicle.us_idx ? (
-      <span className="font-medium text-blue-600">배정 완료</span>
-    ) : (
-      <span className="font-medium text-gray-600">배정 안됨</span>
-    );
-  };
-
   return (
-    <div className="mr-8 w-96">
-      <div className="mb-4 flex justify-end">
+    <div className="w-full max-w-3xl">
+      <div className="mb-4 flex justify-end gap-2">
+        <button
+          onClick={onDriverListClick}
+          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+        >
+          기사 목록
+        </button>
         <button
           onClick={onRegisterClick}
-          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          className="rounded-md bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
         >
           차량 등록
         </button>
       </div>
-      <div className="h-[calc(100vh-12rem)] overflow-y-auto">
-        <div className="space-y-4">
-          {vehicles.map((vehicle) => (
-            <div
-              key={vehicle.sh_idx}
-              className="cursor-pointer rounded border p-4 hover:bg-gray-50"
-              onClick={() => onVehicleSelect(vehicle)}
-            >
-              <h3 className="text-lg font-medium">{vehicle.sh_name}</h3>
-              <p className="text-sm text-gray-600">
-                최대 인원: {vehicle.sh_max_cnt}명
-              </p>
-              <p className="text-sm text-gray-600">
-                상태: {getStatusText(vehicle)}
-              </p>
-              {vehicle.us_idx && (
-                <p className="text-sm text-gray-600">기사: {vehicle.us_name}</p>
-              )}
-              <div className="mt-2">
-                <p className="text-sm font-medium text-gray-600">담당 지역:</p>
-                <div className="flex flex-wrap gap-1">
-                  {vehicle.areas.map((area) => (
-                    <span
-                      key={area.sa_idx}
-                      className="rounded-full bg-gray-200 px-2 py-1 text-xs"
-                    >
-                      {area.ar_name}
+      <div className="overflow-hidden rounded-lg border border-gray-200">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">차량명</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">최대인원</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">기사명</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">연락처</th>
+              <th className="px-6 py-3 text-left text-sm font-medium text-gray-500">상태</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200 bg-white">
+            {vehicles.map((vehicle) => (
+              <tr
+                key={vehicle.sh_idx}
+                onClick={() => onVehicleSelect(vehicle)}
+                className="cursor-pointer hover:bg-gray-50"
+              >
+                <td className="px-6 py-4 text-sm text-gray-900">{vehicle.sh_name}</td>
+                <td className="px-6 py-4 text-sm text-gray-900">{vehicle.sh_max_cnt}명</td>
+                <td className="px-6 py-4 text-sm text-gray-900">
+                  {vehicle.us_name || '-'}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-900">
+                  {vehicle.us_contact || '-'}
+                </td>
+                <td className="px-6 py-4 text-sm">
+                  {vehicle.us_idx ? (
+                    <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                      배정 완료
                     </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                  ) : (
+                    <span className="inline-flex rounded-full bg-gray-100 px-2 text-xs font-semibold leading-5 text-gray-800">
+                      미배정
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

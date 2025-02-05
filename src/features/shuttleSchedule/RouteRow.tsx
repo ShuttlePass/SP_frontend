@@ -1,5 +1,4 @@
 import { TimeSlot } from "./schedule.types";
-import { TimeBox } from "./TimeBox";
 
 interface RouteRowProps {
   routeName: string;
@@ -25,13 +24,20 @@ export const RouteRow = ({
             <button
               key={slot.time}
               onClick={() => onTimeSlotClick?.(slot.time)}
-              className={`w-24 rounded-lg border p-2 text-center transition-colors ${
+              className={`flex w-24 flex-col rounded-lg border p-2 text-center transition-colors ${
                 selectedTime === slot.time
                   ? "bg-blue-500 text-white"
                   : "hover:bg-gray-50"
               }`}
             >
-              {slot.time}
+              <span>{slot.time}</span>
+              <span className={`mt-1 text-sm ${
+                selectedTime === slot.time 
+                  ? "text-white" 
+                  : "text-blue-500"
+              }`}>
+                {slot.passengers?.length || 0}명
+              </span>
             </button>
           ))}
         </div>
